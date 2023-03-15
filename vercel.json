@@ -1,0 +1,11 @@
+{
+    "version": 2,
+    "name": "incrumentus-ai",
+    "alias": "incrumentus-ai.vercel.app",
+    "builds": [
+      { "src": "next.config.js", "use": "@vercel/next" }
+    ],
+    "routes": [
+      { "src": "/.*", "dest": "/index.js" }
+    ]
+  }
