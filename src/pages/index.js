@@ -313,6 +313,9 @@ flex-direction: column;
 align-items: center;
 justify-content: center;
 gap: 15px;
+@media (prefers-color-scheme: dark) {
+  color: white;
+}
 `;
 
 const ProcessHeader = styled.h1`
