@@ -32,5 +32,6 @@ yarn-error.log*
 .vercel
 
 # api
-openapi.js
+openai.js
 ocr.js
+/lib/
