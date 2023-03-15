@@ -141,7 +141,7 @@ export default function Home( {providers} ) {
       <Main>
       {processStatus==process[0] && <InputContainer>
         <ProcessHeader>1. Login to spotify <br></br> 2. Add festival poster</ProcessHeader>
-        {spotifyAPI.getAccessToken() && Object.values(providers).map((provider)=>(
+        {!spotifyApi.getAccessToken() && Object.values(providers).map((provider)=>(
             <div key={provider.name}>
                 <SpotifyLogin
                 onClick={()=>signIn(provider.id, {callbackUrl: "/"})}>
