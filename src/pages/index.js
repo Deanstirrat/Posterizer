@@ -5,7 +5,7 @@ import styled from 'styled-components'
 import Link from 'next/link'
 import React, { use, useEffect, useState } from 'react'
 import { getOCR } from '../../lib/ocr'
-import { getFromAI } from '../../lib/openai'
+import { getFromAI } from './api/openai'
 import { getProviders, signIn } from "next-auth/react";
 import { useSession } from 'next-auth/react'
 import useSpotify from '../../hooks/useSpotify'
@@ -55,12 +55,14 @@ export default function Home( {providers} ) {
         setProcessStatus(process[0]);
         return;
       }
-      console.log("image scraped, cleaning text to get artitsts");
+      console.log("Finding artists in text");
       setProcessStatus(process[2]);
-      getFromAI(prompt+data)
-      .then(async (artistsData) => {
-        console.log(JSON.parse(artistsData));
-        JSON.parse(artistsData).map((artistData)=>{
+      fetch("/api/openai?prompt=" + encodeURIComponent(data))
+      .then(async (response) => {
+        const artistsData = await response.json();
+        console.log("response: ");
+        console.log(artistsData.result);
+        JSON.parse(artistsData.result).map((artistData)=>{
           artists.add(artistData.toLowerCase())
         })
         console.log("artists found, retrieving music library");
@@ -71,6 +73,11 @@ export default function Home( {providers} ) {
         let library2 = []
         while(run){
           const data = await spotifyApi.getMySavedTracks({limit : 50, offset: (iter*50)})
+          if (data.statusCode!=200) {
+            alert("error getting spotify library, try again");
+            setProcessStatus(process[0]);
+            throw new Error(`HTTP error! status: ${data.statusCode}`);
+          }
           console.log('retrieved chunk #'+(iter+1)+' of library');
           library2 = library2.concat(data.body.items)
           if(data.body.items<50) run=false;
@@ -93,23 +100,38 @@ export default function Home( {providers} ) {
         console.log("finished searching tracks, creating playlist");
         setProcessStatus(process[5]);
         spotifyApi.createPlaylist(festName, { 'description': 'Playlist made with Dean\'s playlist generator', 'public': true })
-        .then((playlist)=>{
+        .then(async (playlist)=>{
           setPlaylistUrl(playlist.body.external_urls.spotify);
           console.log("playlist created, adding tracks");
-          spotifyApi.addTracksToPlaylist(playlist.body.id, Array.from(playlistData))
-          .then(console.log("DONE!!!"));
+          let iter=0;
+          let run = true;
+          const playListArray = Array.from(playlistData);
+          while(run){
+            const slice = playListArray.slice((iter*100), ((iter*100)+100));
+            const response = await spotifyApi.addTracksToPlaylist(playlist.body.id, slice)
+            if (response.statusCode!=200 && response.statusCode!=201) {
+              alert("No tracks found");
+              setProcessStatus(process[0]);
+              throw new Error(`HTTP error! status: ${response.statusCode}`);
+            }
+            if(slice.length<100) run=false;
+            iter=iter+1;
+          }
           setProcessStatus(process[6]);
         }, function(err) {
             console.log('Something went wrong!', err);
             alert('unable to create playlist');
+            setProcessStatus(process[0]);
         });
       }, function(err) {
           console.log('Something went wrong!', err);
           alert('openai error(common), try again');
+          setProcessStatus(process[0]);
         });
     }, function(err) {
         console.log('Something went wrong!', err);
         alert('error atempting to scrape image, ensure valid link is used');
+        setProcessStatus(process[0]);
     });
   }
 
@@ -329,14 +351,13 @@ color: white;
 
 const process = [
   'before',
-  'Scraping text from image',
-  'Image scraped, using ai to clean data to and find artitst names',
-  'Artists found, retrieving music library',
-  'Retrieved full library, begin matching tracks',
-  'Found all matching tracks, building playlist',
+  'Scraping text from poster image',
+  'Using AI to find artist names',
+  'Retrieving liked songs from spotify',
+  'Finding songs with attending artists',
+  'Creating playlist',
   'done'
 ]
-const prompt = "I have text that has been scrapped from an image displaying musical artists at an upcoming festival. The names may have been displayed in a stylized fashion, including multiple columns and rotated text. Because of this, the OCR may have joined multiple artist names together or fragmented individual artist names. Please parse the data to find the names of all musical artist. Please rejoin fragmented names and separate the merged names of multiple artists. There may be spelling errors as a result of an unperfect OCR result, correct these errors only if you are confident. Return only an array containing the found artist names. Use the following data: ";
 
 export async function getServerSideProps() {
   const providers = await getProviders();
