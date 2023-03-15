@@ -26,10 +26,6 @@ export default function Home( {providers} ) {
   const [numFound, setNumFound] = useState(0);
 
   useEffect(()=>{
-    if(spotifyApi.getAccessToken()){
-      console.log("token granted")
-    }
-
   }, [session, spotifyApi]);
 
 
@@ -145,7 +141,7 @@ export default function Home( {providers} ) {
       <Main>
       {processStatus==process[0] && <InputContainer>
         <ProcessHeader>1. Login to spotify <br></br> 2. Add festival poster</ProcessHeader>
-        {Object.values(providers).map((provider)=>(
+        {spotifyAPI.getAccessToken() && Object.values(providers).map((provider)=>(
             <div key={provider.name}>
                 <SpotifyLogin
                 onClick={()=>signIn(provider.id, {callbackUrl: "/"})}>
