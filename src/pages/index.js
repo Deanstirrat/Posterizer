@@ -56,6 +56,7 @@ export default function Home( {providers} ) {
       setProcessStatus(process[2]);
       fetch("https://posterizer-gamma.vercel.app/api/openai?prompt=" + encodeURIComponent(data))
       .then(async (response) => {
+        console.log(response);
         const artistsData = await response.json();
         console.log(artistsData.result);
         JSON.parse(artistsData.result).map((artistData)=>{
