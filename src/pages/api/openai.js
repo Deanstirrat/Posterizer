@@ -12,6 +12,8 @@ export default async function handler (req, res) {
 
     const completion = await openai.createChatCompletion({
       model: "gpt-3.5-turbo",
+      temperature: 0.5,
+      max_tokens: 700,
       messages: [
         {"role": "system", content: setupPrompt+taskPrompt},
         {"role": "user", content: prompt}
