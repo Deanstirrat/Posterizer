@@ -54,7 +54,7 @@ export default function Home( {providers} ) {
       }
       console.log("Finding artists in text");
       setProcessStatus(process[2]);
-      fetch("/api/openai?prompt=" + encodeURIComponent(data))
+      fetch("https://posterizer-gamma.vercel.app/api/openai?prompt=" + encodeURIComponent(data))
       .then(async (response) => {
         const artistsData = await response.json();
         console.log(artistsData.result);
