@@ -10,7 +10,6 @@ export default async function handler (req, res) {
   try{
     const prompt = req.query.prompt;
 
-    console.log("calling ai to clean data");
     const completion = await openai.createChatCompletion({
       model: "gpt-3.5-turbo",
       messages: [
@@ -19,7 +18,6 @@ export default async function handler (req, res) {
         {"role": "user", content: prompt}
       ],
     });
-    console.log("ai parsed text, returning results");
 
     const result = completion.data.choices[0].message.content;
 

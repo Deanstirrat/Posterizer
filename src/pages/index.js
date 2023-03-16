@@ -46,7 +46,7 @@ export default function Home( {providers} ) {
     console.log("scraping text from image");
     setProcessStatus(process[1]);
     getOCR(image, imageURL)
-    .then((data) => {
+    .then(async (data) => {
       if(data==undefined){
         console.log("bad result");
         setProcessStatus(process[0]);
@@ -54,8 +54,8 @@ export default function Home( {providers} ) {
       }
       console.log("Finding artists in text");
       setProcessStatus(process[2]);
-      fetch("/api/openai?prompt=" + encodeURIComponent(data))
-      .then(async (response) => {
+      try{
+        const response = await fetch("/api/openai?prompt=" + encodeURIComponent(data))
         const artistsData = await response.json();
         console.log(artistsData.result);
         JSON.parse(artistsData.result).map((artistData)=>{
@@ -121,11 +121,12 @@ export default function Home( {providers} ) {
             alert('unable to create playlist');
             setProcessStatus(process[0]);
         });
-      }, function(err) {
-          console.log('Something went wrong!', err);
-          alert('openai error(common), try again');
-          setProcessStatus(process[0]);
-        });
+      } catch (reason){
+        setProcessStatus(process[0]);
+        const message = reason instanceof Error ? reason.message : reason;
+        console.log("API failure:", message);
+        return res.status(500).json({ message: "Internal Server Error" });
+        }
     }, function(err) {
         console.log('Something went wrong!', err);
         alert('error atempting to scrape image, ensure valid link is used');
