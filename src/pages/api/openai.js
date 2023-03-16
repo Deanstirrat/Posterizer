@@ -8,22 +8,28 @@ const configuration = new Configuration({
 const openai = new OpenAIApi(configuration);
 
 export default async function handler (req, res) {
-  const prompt = req.query.prompt;
+  try{
+    const prompt = req.query.prompt;
 
-  console.log("calling ai to clean data");
-  const completion = await openai.createChatCompletion({
-    model: "gpt-3.5-turbo",
-    messages: [
-      {"role": "system", content: setupPrompt},
-      {"role": "system", content: taskPrompt},
-      {role: "user", content: prompt}
-    ],
-  });
-  console.log("ai parsed text, returning results");
+    console.log("calling ai to clean data");
+    const completion = await openai.createChatCompletion({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {"role": "system", content: setupPrompt},
+        {"role": "system", content: taskPrompt},
+        {"role": "user", content: prompt}
+      ],
+    });
+    console.log("ai parsed text, returning results");
 
-  const result = completion.data.choices[0].message.content;
+    const result = completion.data.choices[0].message.content;
 
-  res.status(200).json({ result });
+    res.status(200).json({ result });
+  } catch (reason) {
+    const message = reason instanceof Error ? reason.message : reason;
+    console.log("API failure:", message);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
 }
 
 
