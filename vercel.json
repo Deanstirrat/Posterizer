@@ -1,7 +1,6 @@
 {
     "version": 2,
-    "name": "incrumentus-ai",
-    "alias": "incrumentus-ai.vercel.app",
+    "name": "posterizer",
     "builds": [
       { "src": "next.config.js", "use": "@vercel/next" }
     ],
