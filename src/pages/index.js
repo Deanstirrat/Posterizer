@@ -5,11 +5,11 @@ import styled from 'styled-components'
 import Link from 'next/link'
 import React, { use, useEffect, useState } from 'react'
 import { getOCR } from '../../lib/ocr'
-import { getFromAI } from './api/openai'
 import { getProviders, signIn } from "next-auth/react";
-import { useSession } from 'next-auth/react'
-import useSpotify from '../../hooks/useSpotify'
-import LoadingIcons from 'react-loading-icons'
+import { useSession } from 'next-auth/react';
+import useSpotify from '../../hooks/useSpotify';
+import LoadingIcons from 'react-loading-icons';
+import Iframe from 'react-iframe';
 
 
 export default function Home( {providers} ) {
@@ -23,6 +23,7 @@ export default function Home( {providers} ) {
   const [playlistData, setPlaylistData] = useState(new Set());
   const [festName, setFestName] = useState('festival');
   const [playlistUrl, setPlaylistUrl] = useState(null);
+  const [playlistEmbedUrl, setPlaylistEmbedUrl] = useState(null);
   const [numFound, setNumFound] = useState(0);
 
   useEffect(()=>{
@@ -56,7 +57,6 @@ export default function Home( {providers} ) {
       fetch("/api/openai?prompt=" + encodeURIComponent(data))
       .then(async (response) => {
         const artistsData = await response.json();
-        console.log("response: ");
         console.log(artistsData.result);
         JSON.parse(artistsData.result).map((artistData)=>{
           artists.add(artistData.toLowerCase())
@@ -97,7 +97,9 @@ export default function Home( {providers} ) {
         setProcessStatus(process[5]);
         spotifyApi.createPlaylist(festName, { 'description': 'Playlist made with Dean\'s playlist generator', 'public': true })
         .then(async (playlist)=>{
+          console.log(playlist.body.external_urls.spotify);
           setPlaylistUrl(playlist.body.external_urls.spotify);
+          setPlaylistEmbedUrl(playlist.body.external_urls.spotify.replace(/open.spotify.com\/playlist\//, "open.spotify.com/embed/playlist/"));
           console.log("playlist created, adding tracks");
           let iter=0;
           let run = true;
@@ -189,7 +191,17 @@ export default function Home( {providers} ) {
       <ProcessDisplayContainer>
         <ProcessHeader>Found {numFound} songs</ProcessHeader>
         <PlaylistLink href={playlistUrl}>View Playlist</PlaylistLink>
-        <ResetButton onClick={()=>{setProcessStatus(process[0]); setNumFound(0)}}>Reset</ResetButton>
+        <ResetButton onClick={()=>{setProcessStatus(process[0]); setNumFound(0); setImage(null); setImageURL(null)}}>Reset</ResetButton>
+        <PlaylistEmbed 
+          style="border-radius:12px" 
+          src={playlistEmbedUrl}
+          height="352" 
+          width='100%'
+          frameBorder="0" 
+          allowFullScreen="" 
+          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
+          loading="lazy">
+        </PlaylistEmbed>
       </ProcessDisplayContainer>
       }
       </Main>
@@ -331,6 +343,13 @@ color: white;
 &:hover{
   filter: brightness(80%);
   cursor: pointer;
+}
+`;
+
+const PlaylistEmbed = styled(Iframe)`
+width: 40%;
+@media (max-width: 750px) {
+  width: 80%;
 }
 `;
 
