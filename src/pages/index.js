@@ -122,6 +122,7 @@ export default function Home( {providers} ) {
             setProcessStatus(process[0]);
         });
       } catch (reason){
+        console.log(reason);
         setProcessStatus(process[0]);
         const message = reason instanceof Error ? reason.message : reason;
         console.log("API failure:", message);
