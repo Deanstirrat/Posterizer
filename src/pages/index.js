@@ -10,8 +10,11 @@ import { useSession } from 'next-auth/react';
 import useSpotify from '../../hooks/useSpotify';
 import LoadingIcons from 'react-loading-icons';
 import Iframe from 'react-iframe';
-import { BsFill1CircleFill, BsFill2CircleFill } from "react-icons/bs";
+import { BsFill1CircleFill, BsFill2CircleFill, BsFillPeopleFill, BsMusicNoteBeamed } from "react-icons/bs";
 import { AiFillCheckCircle, AiFillGithub } from "react-icons/ai";
+import { CircularProgressbar } from 'react-circular-progressbar';
+import 'react-circular-progressbar/dist/styles.css';
+import VisibilitySensor from "react-visibility-sensor";
 
 
 export default function Home( {providers} ) {
@@ -22,6 +25,7 @@ export default function Home( {providers} ) {
   const [image, setImage] = useState(null);
   const [imageURL, setImageURL] = useState(null);
   const [artists, setArtists] = useState(new Set());
+  const [userArtists, setUserArtists] = useState(new Set())
   const [playlistData, setPlaylistData] = useState(new Set());
   const [festName, setFestName] = useState('Festival Playlist');
   const [playlistUrl, setPlaylistUrl] = useState(null);
@@ -119,6 +123,7 @@ export default function Home( {providers} ) {
         for(let item of library2){
           for(let trackArtist of item.track.artists){
             if(artists.has(trackArtist.name.toLowerCase())){
+              userArtists.add(trackArtist.name.toLowerCase());
               console.log("found match");
               count++;
               playlistData.add(item.track.uri);
@@ -242,15 +247,25 @@ export default function Home( {providers} ) {
             <ProcessHeader>Retrieved {libraryItems} songs</ProcessHeader>}
           </ProcessDisplayContainer>
           }
+
+</ContentContainer>
           
 
 
           {/* FINISHED */}
           {processStatus==process[6] &&
-          <ProcessDisplayContainer>
-            <ProcessHeader>Found {numFound} songs</ProcessHeader>
-            <PlaylistLink href={playlistUrl}>View Playlist</PlaylistLink>
-            <ResetButton onClick={()=>{setProcessStatus(process[0]); setNumFound(0); setImage(null); setImageURL(null); setLibraryItems(0);}}>Reset</ResetButton>
+          <FinishedContainer>
+              <ArtistsCircleContainer>
+                <VisibilitySensor>
+                  {({ isVisible }) => {
+                    const percentage = isVisible ? userArtists.size : 0;
+                    return (
+                      <CircularProgressbar value={percentage} maxValue={artists.size} text={`${userArtists.size}/${artists.size}`} />
+
+                    );
+                  }}
+                </VisibilitySensor>
+              </ArtistsCircleContainer>
             <PlaylistEmbed 
               style="border-radius:12px" 
               src={playlistEmbedUrl}
@@ -261,9 +276,15 @@ export default function Home( {providers} ) {
               allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
               loading="lazy">
             </PlaylistEmbed>
-          </ProcessDisplayContainer>
+            <DetailsConatiner>
+              <DetailSpan><BsMusicNoteBeamed/> - {numFound} songs</DetailSpan>
+              <DetailSpan><BsFillPeopleFill/> - {userArtists.size} artists</DetailSpan>
+            </DetailsConatiner>
+            <ResetButton onClick={()=>{setProcessStatus(process[0]); setNumFound(0); setImage(null); setImageURL(null); setLibraryItems(0);setArtists(new Set()); setUserArtists(new Set());}}>Restart</ResetButton>
+          </FinishedContainer>
           }
-        </ContentContainer>
+
+
         <CenterDiv>
           <CreditTag>
             <span>
@@ -468,7 +489,7 @@ color: white;
 `;
 
 const ProcessDisplayContainer = styled.div`
-margin-top: 100px;
+margin-top: 50px;
 grid-column-start: 2;
 grid-column-end: 3;
 height: 100%;
@@ -510,21 +531,39 @@ font-family: 'Source Code Pro', monospace;
 }
 `;
 
-const PlaylistLink = styled(Link)`
-font-weight: 700;
-font-family: Arial, Helvetica, sans-serif;
-border: none;
-padding: 10px;
-border-radius: 5px;
-background-color: #1DB954;
-color: white;
-&:hover{
-  filter: brightness(80%);
-  cursor: pointer;
-}
+const FinishedContainer = styled.div`
+display: grid;
+grid-template-columns: 1fr minmax(100px, 200px) 400px 1fr;
+grid-template-rows: 50px 200px 100px 50px 100px;
+gap: 10px;
 `;
 
+const ArtistsCircleContainer = styled.div`
+width: 100%;
+height: 100%;
+grid-row: 2/3;
+grid-column: 2/3;
+font-family: Arial, Helvetica, sans-serif;
+`;
+
+const DetailsConatiner = styled.div`
+display: flex;
+flex-direction: column;
+grid-row: 3/4;
+grid-column: 2/3;
+`;
+
+const DetailSpan = styled.div`
+font-size: 2rem;
+font-family: Arial, Helvetica, sans-serif;
+`
+
+
 const PlaylistEmbed = styled(Iframe)`
+grid-row-start: 2;
+grid-row-end: 3;
+grid-column-start: 3;
+grid-column-end: 4;
 width: 100%;
 height: 500px;
 border-radius:30px;
@@ -534,8 +573,11 @@ border-radius:30px;
 `;
 
 const ResetButton = styled.button`
+grid-row: 4/5;
+grid-column: 2/3;
 font-weight: 700;
 font-family: Arial, Helvetica, sans-serif;
+width: 100%;
 border: none;
 padding: 10px;
 border-radius: 5px;
@@ -550,7 +592,6 @@ color: white;
 const CenterDiv = styled.div`
 margin-top: 100px;
 width: 100%;
-height: 100%;
 display: flex;
 flex-direction: column;
 align-items: center;

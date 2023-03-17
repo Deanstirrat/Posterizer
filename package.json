@@ -18,10 +18,12 @@
     "ocr-space-api-wrapper": "^2.2.0",
     "openai": "^3.2.1",
     "react": "18.2.0",
+    "react-circular-progressbar": "^2.1.0",
     "react-dom": "18.2.0",
     "react-icons": "^4.8.0",
     "react-iframe": "^1.8.5",
     "react-loading-icons": "^1.1.0",
+    "react-visibility-sensor": "^5.1.1",
     "spotify-web-api-node": "^5.0.2",
     "styled-components": "^5.3.8",
     "typescript": "^5.0.2"
