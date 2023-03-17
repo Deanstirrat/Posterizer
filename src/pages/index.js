@@ -217,7 +217,7 @@ export default function Home( {providers} ) {
             id="poster upload" name="poster upload"
             accept="image/png, image/jpeg" onChange={(e) => handleImageChange(e)}>
           </FileUpload>
-          <FileUploadButton for="poster upload">Select file</FileUploadButton>
+          <FileUploadButton htmlFor="poster upload">Select file</FileUploadButton>
           or
           <LinkSpan>
             <LinkInput type="text"
