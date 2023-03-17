@@ -98,7 +98,7 @@ export default function Home( {providers} ) {
       }
 
       console.log("finished");
-      const artistsData = JSON.stringify(artistList.split(','));
+      const artistsData = JSON.stringify(artistList.split(', '));
       console.log(artistsData);
       JSON.parse(artistsData).map((artistData)=>{
         artists.add(artistData.toLowerCase())
