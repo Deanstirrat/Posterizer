@@ -25,6 +25,7 @@ export default function Home( {providers} ) {
   const [playlistUrl, setPlaylistUrl] = useState(null);
   const [playlistEmbedUrl, setPlaylistEmbedUrl] = useState(null);
   const [numFound, setNumFound] = useState(0);
+  const [artistStreamData, setArtistStreamData] = useState(null);
 
   useEffect(()=>{
   }, [session, spotifyApi]);
@@ -46,21 +47,65 @@ export default function Home( {providers} ) {
     console.log("scraping text from image");
     setProcessStatus(process[1]);
     getOCR(image, imageURL)
-    .then(async (data) => {
-      if(data==undefined){
+    .then(async (imageData) => {
+      if(imageData==undefined){
         console.log("bad result");
         setProcessStatus(process[0]);
         return;
       }
       console.log("Finding artists in text");
       setProcessStatus(process[2]);
-      try{
-        const response = await fetch("/api/openai?prompt=" + encodeURIComponent(data))
-        const artistsData = await response.json();
-        console.log(artistsData.result);
-        JSON.parse(artistsData.result).map((artistData)=>{
-          artists.add(artistData.toLowerCase())
-        })
+      // try{
+      //   const response = await fetch("/api/openai?prompt=" + encodeURIComponent(imageData))
+      //   const artistsData = await response.json();
+      //   console.log(artistsData.result);
+      //   JSON.parse(artistsData.result).map((artistData)=>{
+      //     artists.add(artistData.toLowerCase())
+      //   })
+
+
+
+      ///TESTING START
+
+      const cleanArtists = await fetch("/api/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt,
+        }),
+      });
+      if (!cleanArtists.ok) {
+        throw new Error(cleanArtists.statusText);
+      }
+      const responseData = cleanArtists.body;
+      if (!responseData) {
+        return;
+      }
+
+      const reader = responseData.getReader();
+      const decoder = new TextDecoder();
+      let done = false;
+
+      while (!done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        const chunkValue = decoder.decode(value);
+        setArtistStreamData((prev) => prev + chunkValue);
+      }
+
+      const artistsData = await artistStreamData.json();
+      console.log(artistsData.result);
+      JSON.parse(artistsData.result).map((artistData)=>{
+        artists.add(artistData.toLowerCase())
+      })
+
+      ///TESTING END
+
+
+
+
         console.log("artists found, retrieving music library");
         console.log(artists);
         setProcessStatus(process[3]);
@@ -121,13 +166,13 @@ export default function Home( {providers} ) {
             alert('unable to create playlist');
             setProcessStatus(process[0]);
         });
-      } catch (reason){
-        console.log(reason);
-        setProcessStatus(process[0]);
-        const message = reason instanceof Error ? reason.message : reason;
-        console.log("API failure:", message);
-        return res.status(500).json({ message: "Internal Server Error" });
-        }
+      // } catch (reason){
+      //   console.log(reason);
+      //   setProcessStatus(process[0]);
+      //   const message = reason instanceof Error ? reason.message : reason;
+      //   console.log("API failure:", message);
+      //   return res.status(500).json({ message: "Internal Server Error" });
+      //   }
     }, function(err) {
         console.log('Something went wrong!', err);
         alert('error atempting to scrape image, ensure valid link is used');
