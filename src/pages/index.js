@@ -21,7 +21,7 @@ export default function Home( {providers} ) {
   const [imageURL, setImageURL] = useState(null);
   const [artists, setArtists] = useState(new Set());
   const [playlistData, setPlaylistData] = useState(new Set());
-  const [festName, setFestName] = useState('festival');
+  const [festName, setFestName] = useState('Festival Playlist');
   const [playlistUrl, setPlaylistUrl] = useState(null);
   const [playlistEmbedUrl, setPlaylistEmbedUrl] = useState(null);
   const [numFound, setNumFound] = useState(0);
@@ -43,11 +43,10 @@ export default function Home( {providers} ) {
     reader.readAsDataURL(file);
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     console.log("scraping text from image");
     setProcessStatus(process[1]);
-    getOCR(image, imageURL)
-    .then(async (prompt) => {
+    const prompt = await getOCR(image, imageURL);
       if(prompt==undefined){
         console.log("bad result");
         setProcessStatus(process[0]);
@@ -55,17 +54,6 @@ export default function Home( {providers} ) {
       }
       console.log("Finding artists in text");
       setProcessStatus(process[2]);
-      // try{
-      //   const response = await fetch("/api/openai?prompt=" + encodeURIComponent(imageData))
-      //   const artistsData = await response.json();
-      //   console.log(artistsData.result);
-      //   JSON.parse(artistsData.result).map((artistData)=>{
-      //     artists.add(artistData.toLowerCase())
-      //   })
-
-
-
-      ///TESTING START
       setArtistStreamData("");
       const cleanArtists = await fetch("/api/openai", {
         method: "POST",
@@ -98,17 +86,12 @@ export default function Home( {providers} ) {
       }
 
       console.log("finished");
+      setArtistStreamData("");
       const artistsData = JSON.stringify(artistList.split(', '));
       console.log(artistsData);
       JSON.parse(artistsData).map((artistData)=>{
         artists.add(artistData.toLowerCase())
       })
-
-      ///TESTING END
-
-
-
-
         console.log("artists found, retrieving music library");
         console.log(artists);
         setProcessStatus(process[3]);
@@ -169,18 +152,6 @@ export default function Home( {providers} ) {
             alert('unable to create playlist');
             setProcessStatus(process[0]);
         });
-      // } catch (reason){
-      //   console.log(reason);
-      //   setProcessStatus(process[0]);
-      //   const message = reason instanceof Error ? reason.message : reason;
-      //   console.log("API failure:", message);
-      //   return res.status(500).json({ message: "Internal Server Error" });
-      //   }
-    }, function(err) {
-        console.log('Something went wrong!', err);
-        alert('error atempting to scrape image, ensure valid link is used');
-        setProcessStatus(process[0]);
-    });
   }
 
   return (
