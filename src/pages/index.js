@@ -47,8 +47,8 @@ export default function Home( {providers} ) {
     console.log("scraping text from image");
     setProcessStatus(process[1]);
     getOCR(image, imageURL)
-    .then(async (imageData) => {
-      if(imageData==undefined){
+    .then(async (prompt) => {
+      if(prompt==undefined){
         console.log("bad result");
         setProcessStatus(process[0]);
         return;
@@ -66,8 +66,8 @@ export default function Home( {providers} ) {
 
 
       ///TESTING START
-
-      const cleanArtists = await fetch("/api/generate", {
+      setArtistStreamData("");
+      const cleanArtists = await fetch("/api/openai", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -88,16 +88,19 @@ export default function Home( {providers} ) {
       const decoder = new TextDecoder();
       let done = false;
 
+      let artistList = "";
       while (!done) {
         const { value, done: doneReading } = await reader.read();
         done = doneReading;
         const chunkValue = decoder.decode(value);
+        artistList = artistList + chunkValue;
         setArtistStreamData((prev) => prev + chunkValue);
       }
 
-      const artistsData = await artistStreamData.json();
-      console.log(artistsData.result);
-      JSON.parse(artistsData.result).map((artistData)=>{
+      console.log("finished");
+      const artistsData = JSON.stringify(artistList.split(','));
+      console.log(artistsData);
+      JSON.parse(artistsData).map((artistData)=>{
         artists.add(artistData.toLowerCase())
       })
 
@@ -230,8 +233,7 @@ export default function Home( {providers} ) {
       <ProcessDisplayContainer>
         <LoadingIcons.Grid fill="#1DB954"/>
         <ProcessHeader>{processStatus}</ProcessHeader>
-        {processStatus==process[4] && 
-        <ProcessHeader>Found: {numFound}</ProcessHeader>}
+        <p>{artistStreamData}</p>
       </ProcessDisplayContainer>
       }
       {processStatus==process[6] &&
