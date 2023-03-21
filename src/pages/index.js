@@ -33,8 +33,11 @@ export default function Home( {providers} ) {
   const [numFound, setNumFound] = useState(0);
   const [artistStreamData, setArtistStreamData] = useState(null);
   const [libraryItems, setLibraryItems] = useState(0);
+  const [spotifyLoggedIn, setspotifyLoggedIn] = useState(false);
 
   useEffect(()=>{
+    console.log('login update');
+    setspotifyLoggedIn(spotifyApi.getAccessToken());
   }, [session, spotifyApi]);
 
 
@@ -178,8 +181,8 @@ export default function Home( {providers} ) {
           {/* INPUT */}
           {processStatus==process[0] && <InputContainer>
             <InstructionsContainer>
-              {spotifyApi.getAccessToken() ? <InstructionsItemDone><CheckIcon/> Logged-in to Spotify</InstructionsItemDone> : <InstructionsItem><BsFill1CircleFill/> Login to Spotify</InstructionsItem>}
-              {!spotifyApi.getAccessToken() && Object.values(providers).map((provider)=>(
+              {spotifyLoggedIn ? <InstructionsItemDone><CheckIcon/> Logged-in to Spotify</InstructionsItemDone> : <InstructionsItem><BsFill1CircleFill/> Login to Spotify</InstructionsItem>}
+              {!spotifyLoggedIn && Object.values(providers).map((provider)=>(
                 <div key={provider.name}>
                     <SpotifyLogin
                     onClick={()=>signIn(provider.id, {callbackUrl: "/"})}>
@@ -226,7 +229,7 @@ export default function Home( {providers} ) {
               placeholder='Festival name'
               onChange={(e) => setFestName(e.target.value)}>
             </NameInput> */}
-            <SubmitButton disabled={((imageURL==null || imageURL=='') && image==null) ||  !spotifyApi.getAccessToken()} onClick={handleSubmit}><BsHammer/>Build Playlist</SubmitButton>
+            <SubmitButton disabled={((imageURL==null || imageURL=='') && image==null) ||  !spotifyLoggedIn} onClick={handleSubmit}><BsHammer/>Build Playlist</SubmitButton>
 
             <AppDescriptionContainer>
               Upload an image or submit a link of a festival poster and this app will create a custom spotify playlist based on the artists attending and the songs in you music library
@@ -362,7 +365,7 @@ border-color: black;
 const LineBreak = styled.div`
 position: relative;
 font-size: 20px;
-width: 100%;
+width: 50%;
 z-index: 1;
 overflow: hidden;
 text-align: center;
