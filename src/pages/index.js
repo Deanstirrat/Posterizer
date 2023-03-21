@@ -10,7 +10,7 @@ import { useSession } from 'next-auth/react';
 import useSpotify from '../../hooks/useSpotify';
 import LoadingIcons from 'react-loading-icons';
 import Iframe from 'react-iframe';
-import { BsFill1CircleFill, BsFill2CircleFill, BsFillPeopleFill, BsMusicNoteBeamed } from "react-icons/bs";
+import { BsFill1CircleFill, BsFill2CircleFill, BsFillPeopleFill, BsMusicNoteBeamed, BsHammer } from "react-icons/bs";
 import { AiFillCheckCircle, AiFillGithub } from "react-icons/ai";
 import { CircularProgressbar } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
@@ -178,7 +178,7 @@ export default function Home( {providers} ) {
           {/* INPUT */}
           {processStatus==process[0] && <InputContainer>
             <InstructionsContainer>
-              {spotifyApi.getAccessToken() ? <InstructionsItemDone><CheckIcon size={27}/> Login to spotify</InstructionsItemDone> : <InstructionsItem><BsFill1CircleFill/>Login to spotify </InstructionsItem>}
+              {spotifyApi.getAccessToken() ? <InstructionsItemDone><CheckIcon/> Logged-in to Spotify</InstructionsItemDone> : <InstructionsItem><BsFill1CircleFill/> Login to Spotify</InstructionsItem>}
               {!spotifyApi.getAccessToken() && Object.values(providers).map((provider)=>(
                 <div key={provider.name}>
                     <SpotifyLogin
@@ -194,14 +194,8 @@ export default function Home( {providers} ) {
                     </SpotifyLogin>
                 </div>
             ))}
-              {(image==null && (imageURL==null || imageURL=='')) ? <InstructionsItem><BsFill2CircleFill/> Add festival poster</InstructionsItem> : <InstructionsItemDone><CheckIcon size={27}/> Add festival poster</InstructionsItemDone>}
+              {(image==null && (imageURL==null || imageURL=='')) ? <InstructionsItem><BsFill2CircleFill/> Add lineup poster</InstructionsItem> : <InstructionsItemDone><CheckIcon/> Lineup poster added</InstructionsItemDone>}
             </InstructionsContainer>
-            <NameInput type="text"
-              id="festival name"
-              name="festival name"
-              placeholder='Festival name'
-              onChange={(e) => setFestName(e.target.value)}>
-            </NameInput>
             <InputTypeContainer>
               <FileUpload 
                 type="file"
@@ -212,8 +206,8 @@ export default function Home( {providers} ) {
               </FileUpload>
               <FileUploadButton
                 htmlFor="poster upload"
-                hasFile={image}>Select file</FileUploadButton>
-              or
+                hasFile={image}>{image != null ? <span><CheckIcon/>File Selected</span> : 'Select File'}</FileUploadButton>
+              <LineBreak>or</LineBreak>
               <LinkSpan>
                 <LinkInput 
                   type="text"
@@ -226,7 +220,13 @@ export default function Home( {providers} ) {
                 <ExampleLink href='https://festuff-production.s3.amazonaws.com/uploads/image/attachment/45581/lineup-847-poster-91504ac8-d0d9-42e0-bee2-ae136a86b34b.jpg'>example</ExampleLink>
               </LinkSpan>
             </InputTypeContainer>
-            <SubmitButton disabled={((imageURL==null || imageURL=='') && image==null) ||  !spotifyApi.getAccessToken()} onClick={handleSubmit}>Build my playlist</SubmitButton>
+            {/* <NameInput type="text"
+              id="festival name"
+              name="festival name"
+              placeholder='Festival name'
+              onChange={(e) => setFestName(e.target.value)}>
+            </NameInput> */}
+            <SubmitButton disabled={((imageURL==null || imageURL=='') && image==null) ||  !spotifyApi.getAccessToken()} onClick={handleSubmit}><BsHammer/>Build Playlist</SubmitButton>
 
             <AppDescriptionContainer>
               Upload an image or submit a link of a festival poster and this app will create a custom spotify playlist based on the artists attending and the songs in you music library
@@ -247,7 +247,6 @@ export default function Home( {providers} ) {
             <ProcessHeader>Retrieved {libraryItems} songs</ProcessHeader>}
           </ProcessDisplayContainer>
           }
-
 </ContentContainer>
           
 
@@ -255,17 +254,6 @@ export default function Home( {providers} ) {
           {/* FINISHED */}
           {processStatus==process[6] &&
           <FinishedContainer>
-              <ArtistsCircleContainer>
-                <VisibilitySensor>
-                  {({ isVisible }) => {
-                    const percentage = isVisible ? userArtists.size : 0;
-                    return (
-                      <CircularProgressbar value={percentage} maxValue={artists.size} text={`${userArtists.size}/${artists.size}`} />
-
-                    );
-                  }}
-                </VisibilitySensor>
-              </ArtistsCircleContainer>
             <PlaylistEmbed 
               style="border-radius:12px" 
               src={playlistEmbedUrl}
@@ -276,11 +264,24 @@ export default function Home( {providers} ) {
               allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
               loading="lazy">
             </PlaylistEmbed>
+            <InfoContainer>
+            <ArtistsCircleContainer>
+                <VisibilitySensor>
+                  {({ isVisible }) => {
+                    const percentage = isVisible ? userArtists.size : 0;
+                    return (
+                      <CircularProgressbar value={percentage} maxValue={artists.size} text={`${userArtists.size}/${artists.size}`} />
+
+                    );
+                  }}
+                </VisibilitySensor>
+              </ArtistsCircleContainer>
             <DetailsConatiner>
               <DetailSpan><BsMusicNoteBeamed/> - {numFound} songs</DetailSpan>
               <DetailSpan><BsFillPeopleFill/> - {userArtists.size} artists</DetailSpan>
             </DetailsConatiner>
             <ResetButton onClick={()=>{setProcessStatus(process[0]); setNumFound(0); setImage(null); setImageURL(null); setLibraryItems(0);setArtists(new Set()); setUserArtists(new Set());}}>Restart</ResetButton>
+            </InfoContainer>
           </FinishedContainer>
           }
 
@@ -317,7 +318,8 @@ color: green;
 
 const ContentContainer = styled.div`
 display: grid;
-grid-template-columns: 1fr min(350px) 1fr
+grid-template-columns: 1fr 350px 1fr;
+grid-template-rows: 1fr;
 `;
 
 const InstructionsContainer = styled.div`
@@ -355,17 +357,57 @@ height: 30px;
 border-radius: 10px;
 border: 1px solid;
 border-color: black;
-
 `;
 
+const LineBreak = styled.div`
+position: relative;
+font-size: 20px;
+width: 100%;
+z-index: 1;
+overflow: hidden;
+text-align: center;
+font-family: arial;
+&:after {
+  position: absolute;
+  top: 51%;
+  overflow: hidden;
+  width: 48%;
+  height: 1px;
+  content: '\a0';
+  background-color: black;
+  margin-left: 2%;
+}
+&:before {
+  position: absolute;
+  top: 51%;
+  overflow: hidden;
+  width: 48%;
+  height: 1px;
+  content: '\a0';
+  background-color: black;
+  margin-left: 2%;
+  margin-left: -50%;
+  text-align: right;
+}
+@media (prefers-color-scheme: dark) {
+  &:before {
+    background-color: white;
+  }
+  &:after {
+    background-color: white;
+  }
+  color: white;
+}
+`;
 const InputContainer = styled.div`
-grid-column-start: 2;
-grid-column-end: 3;
+grid-column: 2 / 3;
+grid-row: 1 / 2;
 display: flex;
 flex-direction: column;
 align-items: center;
 margin-top: 100px;
-gap: 5px;
+gap: 25px;
+margin-bottom: 40px;
 `;
 
 const SpotifyLogin = styled.button`
@@ -398,8 +440,9 @@ const InputTypeContainer = styled.div`
 width: 100%;
 justify-content: space-between;
 display: flex;
-gap: 15px;
-align-items: baseline;
+flex-direction: column;
+align-items: center;
+justify-content: center;
 font-family: Arial, Helvetica, sans-serif;
 `;
 
@@ -407,10 +450,11 @@ const LinkSpan = styled.span`
 display: flex;
 flex-direction: column;
 align-items: center;
+width: 100%;
 `;
 
 const LinkInput = styled.input`
-width: 150px;
+width: 80%;
 padding:3px;
 text-align: center;
 border-style: solid;
@@ -425,7 +469,7 @@ border-color: ${(props) => (props.link==null || props.link=='') ? 'black' : 'gre
 
 const ExampleLink = styled(Link)`
 font-size: 0.8rem;
-color: blue;
+color: rgb(88, 219, 219);
 `;
 
 const FileUpload = styled.input`
@@ -443,16 +487,17 @@ white-space: nowrap;
 cursor: pointer;
 font-weight: 700;
 font-size: 10pt;
-width: 150px;
+width: 80%;
 text-align: center;
 font-family: Arial, Helvetica, sans-serif;
 border-color: ${(props) => props.hasFile==null ? 'black' : 'green'};
 color: ${(props) => props.hasFile==null ? 'black' : 'green'};
 
-&:hover::before {
-  border-color: black;
+&:hover {
+  background-color: black;
+  color: white;
 }
-&:active::before {
+&:active:before {
   background: -webkit-linear-gradient(top, #e3e3e3, #f9f9f9);
 }
 @media (prefers-color-scheme: dark) {
@@ -463,15 +508,23 @@ color: ${(props) => props.hasFile==null ? 'black' : 'green'};
 
 const SubmitButton = styled.button`
 font-family: Arial, Helvetica, sans-serif;
+display: flex;
+align-items: center;
+justify-content: center;
 font-weight: 900;
 padding: 15px;
 border: none;
 border-radius: 20px;
 width: 150px;
-background: rgb(249,13,3);
-background: linear-gradient(40deg, rgba(249,13,3,1) 4%, rgba(219,165,31,1) 22%, rgba(74,200,58,1) 39%, rgba(40,163,136,1) 63%, rgba(29,56,159,1) 79%, rgba(255,44,192,1) 100%);
-background:${(props)=>props.disabled?'gray':'linear-gradient(40deg, rgba(249,13,3,1) 4%, rgba(219,165,31,1) 22%, rgba(74,200,58,1) 39%, rgba(40,163,136,1) 63%, rgba(29,56,159,1) 79%, rgba(255,44,192,1) 100%);'};
-cursor:${(props)=>props.disabled?'not-allowed':'pointer'}
+gap: 5px;
+background-color:${(props)=>props.disabled?'gray':'black'};
+color:${(props)=>props.disabled?'blak':'white'};
+cursor:${(props)=>props.disabled?'not-allowed':'pointer'};
+@media (prefers-color-scheme: dark) {
+  background-color:${(props)=>props.disabled?'gray':'white'};
+  color:${(props)=>props.disabled?'blak':'black'};
+  cursor:${(props)=>props.disabled?'not-allowed':'pointer'};
+}
 `;
 
 const AppDescriptionContainer = styled.div`
@@ -534,28 +587,40 @@ font-family: 'Source Code Pro', monospace;
 const FinishedContainer = styled.div`
 display: grid;
 grid-template-columns: 1fr minmax(100px, 200px) 400px 1fr;
-grid-template-rows: 50px 200px 100px 50px 100px;
+grid-template-rows: 50px 1fr; 
 gap: 10px;
+margin-bottom: 20px;
 `;
+
+const InfoContainer = styled.div`
+display: flex;
+flex-direction: column;
+grid-row: 2/3;
+grid-column: 2/3;
+justify-content: space-between;
+@media (max-width: 750px) {
+  justify-content: flex-start;
+  gap: 15px;
+}
+`;
+
 
 const ArtistsCircleContainer = styled.div`
 width: 100%;
-height: 100%;
-grid-row: 2/3;
-grid-column: 2/3;
 font-family: Arial, Helvetica, sans-serif;
 `;
 
 const DetailsConatiner = styled.div`
 display: flex;
 flex-direction: column;
-grid-row: 3/4;
-grid-column: 2/3;
 `;
 
 const DetailSpan = styled.div`
 font-size: 2rem;
 font-family: Arial, Helvetica, sans-serif;
+@media (max-width: 750px) {
+  font-size: 1rem;
+}
 `
 
 
@@ -573,15 +638,17 @@ border-radius:30px;
 `;
 
 const ResetButton = styled.button`
-grid-row: 4/5;
+grid-row: 2/3;
 grid-column: 2/3;
 font-weight: 700;
 font-family: Arial, Helvetica, sans-serif;
 width: 100%;
+height: 50px;
 border: none;
 padding: 10px;
 border-radius: 5px;
-background-color: #1DB954;
+// background-color: #1DB954;
+background-color: red;
 color: white;
 &:hover{
   filter: brightness(80%);
@@ -590,7 +657,6 @@ color: white;
 `;
 
 const CenterDiv = styled.div`
-margin-top: 100px;
 width: 100%;
 display: flex;
 flex-direction: column;
@@ -598,6 +664,7 @@ align-items: center;
 `;
 
 const CreditTag = styled.div`
+justify-self: center;
 display: flex;
 flex-direction: column;
 align-items: center;
