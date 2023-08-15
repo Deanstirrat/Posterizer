@@ -1,18 +1,20 @@
 import Head from 'next/head'
 import Image from 'next/image'
-import { Inter } from 'next/font/google'
-import styled from 'styled-components'
+import styled, { keyframes } from 'styled-components'
 import Link from 'next/link'
-import React, { use, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { getOCR } from '../../lib/ocr'
 import { getProviders, signIn } from "next-auth/react";
 import { useSession } from 'next-auth/react';
 import useSpotify from '../../hooks/useSpotify';
 import LoadingIcons from 'react-loading-icons';
 import Iframe from 'react-iframe';
-import { BsFill1CircleFill, BsFill2CircleFill, BsFillPeopleFill, BsMusicNoteBeamed, BsHammer } from "react-icons/bs";
+import { BsFillPeopleFill, BsMusicNoteBeamed, BsHammer } from "react-icons/bs";
+import { TbHexagonNumber1, TbHexagonNumber2, TbHexagonNumber3, TbPhotoUp } from 'react-icons/tb'
+import {RiPlayListFill} from 'react-icons/ri'
+import { VscServerProcess } from 'react-icons/vsc'
 import { AiFillCheckCircle, AiFillGithub } from "react-icons/ai";
-import { CircularProgressbar } from 'react-circular-progressbar';
+import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import VisibilitySensor from "react-visibility-sensor";
 
@@ -53,17 +55,29 @@ export default function Home( {providers} ) {
     reader.readAsDataURL(file);
   }
 
+  const handleChangeProcess = (num) => {
+    setProcessStatus(process[num]);
+  }
+
+  const handleResetArtistStreamData = () => {
+    setArtistStreamData("");
+  }
+
+  const handleArtistStreamDataChange = (newData) =>{
+    setArtistStreamData((prev) => prev + newData);
+  }
+
   const handleSubmit = async () => {
     console.log("scraping text from image");
-    setProcessStatus(process[1]);
-    const prompt = await getOCR(image, imageURL);
+    setProcessStatus(process[2]);
+    const prompt = await getOCR(image, imageURL, handleChangeProcess);
       if(prompt==undefined){
         console.log("bad result");
         setProcessStatus(process[0]);
         return;
       }
       console.log("Finding artists in text");
-      setProcessStatus(process[2]);
+      setProcessStatus(process[3]);
       setArtistStreamData("");
       const cleanArtists = await fetch("/api/openai", {
         method: "POST",
@@ -104,7 +118,7 @@ export default function Home( {providers} ) {
       })
         console.log("artists found, retrieving music library");
         console.log(artists);
-        setProcessStatus(process[3]);
+        setProcessStatus(process[4]);
         let iter=0;
         let run = true;
         let library2 = []
@@ -121,7 +135,7 @@ export default function Home( {providers} ) {
           iter+=1;
         }
         console.log('retrieved full library, begin matching tracks');
-        setProcessStatus(process[4]);
+        setProcessStatus(process[5]);
         let count = 0;
         for(let item of library2){
           for(let trackArtist of item.track.artists){
@@ -136,7 +150,7 @@ export default function Home( {providers} ) {
         }
         setNumFound(count);
         console.log("finished searching tracks, creating playlist");
-        setProcessStatus(process[5]);
+        setProcessStatus(process[6]);
         spotifyApi.createPlaylist(festName, { 'description': 'Playlist made with Dean\'s playlist generator', 'public': true })
         .then(async (playlist)=>{
           console.log(playlist.body.external_urls.spotify);
@@ -157,7 +171,7 @@ export default function Home( {providers} ) {
             if(slice.length<100) run=false;
             iter=iter+1;
           }
-          setProcessStatus(process[6]);
+          setProcessStatus(process[7]);
         }, function(err) {
             console.log('Something went wrong!', err);
             alert('unable to create playlist');
@@ -174,88 +188,94 @@ export default function Home( {providers} ) {
         <link rel="preconnect" href="https://fonts.googleapis.com"/>
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
         <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro&display=swap" rel="stylesheet"/>
+        <link href="https://fonts.googleapis.com/css2?family=Dosis:wght@300&display=swap" rel="stylesheet"/>
       </Head>
       <Main>
+        {/* INPUT */}
+        {(processStatus==process[0] || processStatus==process[1])&& 
         <ContentContainer>
-
-          {/* INPUT */}
-          {processStatus==process[0] && <InputContainer>
-            <InstructionsContainer>
-              {spotifyLoggedIn ? <InstructionsItemDone><CheckIcon/> Logged-in to Spotify</InstructionsItemDone> : <InstructionsItem><BsFill1CircleFill/> Login to Spotify</InstructionsItem>}
-              {!spotifyLoggedIn && Object.values(providers).map((provider)=>(
-                <div key={provider.name}>
-                    <SpotifyLogin
-                    onClick={()=>signIn(provider.id, {callbackUrl: "/"})}>
-                      <SpotifySpan>
-                        <SpotifyLogo
-                          src="/spotify-logo.png"
-                          alt="Spotify logo"
-                          width={25}
-                          height={25}/>
-                          login with {provider.name}
-                      </SpotifySpan>
-                    </SpotifyLogin>
-                </div>
-            ))}
-              {(image==null && (imageURL==null || imageURL=='')) ? <InstructionsItem><BsFill2CircleFill/> Add lineup poster</InstructionsItem> : <InstructionsItemDone><CheckIcon/> Lineup poster added</InstructionsItemDone>}
-            </InstructionsContainer>
-            <InputTypeContainer>
-              <FileUpload 
-                type="file"
-                id="poster upload" 
-                name="poster upload"
-                accept="image/png, image/jpeg" 
-                onChange={(e) => handleImageChange(e)}>
-              </FileUpload>
-              <FileUploadButton
-                htmlFor="poster upload"
-                hasFile={image}>{image != null ? <span><CheckIcon/>File Selected</span> : 'Select File'}</FileUploadButton>
-              <LineBreak>or</LineBreak>
-              <LinkSpan>
-                <LinkInput 
-                  type="text"
-                  id="posterLink" 
-                  name="posterLink" 
-                  placeholder='Image link'
-                  link={imageURL}
-                  onChange={(e) => setImageURL(e.target.value)}>
-                </LinkInput>
-                <ExampleLink href='https://festuff-production.s3.amazonaws.com/uploads/image/attachment/45581/lineup-847-poster-91504ac8-d0d9-42e0-bee2-ae136a86b34b.jpg'>example</ExampleLink>
-              </LinkSpan>
-            </InputTypeContainer>
-            {/* <NameInput type="text"
-              id="festival name"
-              name="festival name"
-              placeholder='Festival name'
-              onChange={(e) => setFestName(e.target.value)}>
-            </NameInput> */}
-            <SubmitButton disabled={((imageURL==null || imageURL=='') && image==null) ||  !spotifyLoggedIn} onClick={handleSubmit}><BsHammer/>Build Playlist</SubmitButton>
-
-            <AppDescriptionContainer>
-              Upload an image or submit a link of a festival poster and this app will create a custom spotify playlist based on the artists attending and the songs in you music library
-            </AppDescriptionContainer>
-            
-          </InputContainer>}
-
+          <InstructionsContainer process={processStatus}>
+            <InstructionCard process={processStatus}>
+            <NumberIcon1 process={processStatus}/>
+              <InstructionCardIcon><UploadIcon/></InstructionCardIcon>
+              <InstructionCardTextContainer><InstructionText>Upload a poster</InstructionText></InstructionCardTextContainer>
+              {processStatus==process[1] && 
+                <InputContainer>
+                <InputTypeContainer>
+                  <FileUpload 
+                    type="file"
+                    id="poster upload" 
+                    name="poster upload"
+                    accept="image/png, image/jpeg" 
+                    onChange={(e) => handleImageChange(e)}>
+                  </FileUpload>
+                  <FileUploadButton
+                    htmlFor="poster upload"
+                    hasFile={image}>{image != null ? <span><CheckIcon/>File Selected</span> : 'Select File'}</FileUploadButton>
+                  <LineBreak>or</LineBreak>
+                  <LinkSpan>
+                    <LinkInput 
+                      type="text"
+                      id="posterLink" 
+                      name="posterLink" 
+                      placeholder='Image link'
+                      link={imageURL}
+                      onChange={(e) => setImageURL(e.target.value)}>
+                    </LinkInput>
+                    <ExampleLink href='https://festuff-production.s3.amazonaws.com/uploads/image/attachment/45581/lineup-847-poster-91504ac8-d0d9-42e0-bee2-ae136a86b34b.jpg'>example</ExampleLink>
+                  </LinkSpan>
+                </InputTypeContainer>
+                <SubmitButton disabled={((imageURL==null || imageURL=='') && image==null) ||  !spotifyLoggedIn} onClick={handleSubmit}><BsHammer/>Build Playlist</SubmitButton>    
+              </InputContainer>
+              }
+            </InstructionCard>
+            <InstructionCard process={processStatus}>
+            <TbHexagonNumber2 size={40} color={'white'}/>
+              <InstructionCardIcon><BuildingIcon/></InstructionCardIcon>
+              <InstructionCardTextContainer><InstructionText>Run the app</InstructionText></InstructionCardTextContainer>
+            </InstructionCard>
+            <InstructionCard process={processStatus}>
+              <TbHexagonNumber3 size={40} color={'white'}/>
+              <InstructionCardIcon><PlaylistIcon/></InstructionCardIcon>
+              <InstructionCardTextContainer><InstructionText>View your custom playlist</InstructionText></InstructionCardTextContainer>
+            </InstructionCard>
+          </InstructionsContainer>
+          {!spotifyLoggedIn && Object.values(providers).map((provider)=>(
+            <div key={provider.name}>
+                <SpotifyLogin
+                onClick={()=>signIn(provider.id, {callbackUrl: "/"})}>
+                  <SpotifySpan>
+                  login with
+                    <SpotifyLogo
+                      src="/spotify-logo.png"
+                      alt="Spotify logo"
+                      width={177}
+                      height={59}
+                    />
+                  </SpotifySpan>
+                </SpotifyLogin>
+            </div>
+          ))}
+          {spotifyLoggedIn && processStatus==process[0] && <BeginButton onClick={()=>handleChangeProcess(1)}>Begin</BeginButton>}
+        </ContentContainer>}
 
 
           {/* LOADING */}
-          {(processStatus!=process[0] && processStatus!=process[6]) &&
-          <ProcessDisplayContainer>
-            <ProcessHeader>{processStatus}</ProcessHeader>
-            {processStatus==process[1] && <LoadingIcons.Grid fill="#1DB954"/> }
-            {processStatus==process[2] && 
-            <CodeSquare>{artistStreamData}</CodeSquare>}
-            {processStatus==process[3] && 
-            <ProcessHeader>Retrieved {libraryItems} songs</ProcessHeader>}
-          </ProcessDisplayContainer>
+          {(processStatus!=process[0] && processStatus!=process[1] && processStatus!=process[7]) &&
+          <ContentContainer>
+            <ProcessDisplayContainer>
+              <ProcessHeader>{processStatus}</ProcessHeader>
+              {processStatus==process[2] && <LoadingIcons.Grid fill="#1DB954"/> }
+              {processStatus==process[3] && <CodeSquare>{artistStreamData}</CodeSquare>}
+              {processStatus==process[4] && <ProcessHeader>Retrieved {libraryItems} songs</ProcessHeader>}
+            </ProcessDisplayContainer>
+          </ContentContainer>
           }
-</ContentContainer>
           
 
 
           {/* FINISHED */}
-          {processStatus==process[6] &&
+          {processStatus==process[7] &&
           <FinishedContainer>
             <PlaylistEmbed 
               style="border-radius:12px" 
@@ -273,15 +293,19 @@ export default function Home( {providers} ) {
                   {({ isVisible }) => {
                     const percentage = isVisible ? userArtists.size : 0;
                     return (
-                      <CircularProgressbar value={percentage} maxValue={artists.size} text={`${userArtists.size}/${artists.size}`} />
+                      <CircularProgressbar value={percentage} maxValue={artists.size} text={`${percentage}%` } styles={buildStyles({
+                      pathColor: `#1DB954`,
+                      textColor: '#1DB954',
+                      trailColor: '#d6d6d6',
+                      })} />
 
                     );
                   }}
                 </VisibilitySensor>
               </ArtistsCircleContainer>
             <DetailsConatiner>
-              <DetailSpan><BsMusicNoteBeamed/> - {numFound} songs</DetailSpan>
-              <DetailSpan><BsFillPeopleFill/> - {userArtists.size} artists</DetailSpan>
+              <DetailSpan><BsMusicNoteBeamed/> - {numFound}</DetailSpan>
+              <DetailSpan><BsFillPeopleFill/> - {userArtists.size}</DetailSpan>
             </DetailsConatiner>
             <ResetButton onClick={()=>{setProcessStatus(process[0]); setNumFound(0); setImage(null); setImageURL(null); setLibraryItems(0);setArtists(new Set()); setUserArtists(new Set());}}>Restart</ResetButton>
             </InfoContainer>
@@ -305,8 +329,46 @@ export default function Home( {providers} ) {
   )
 }
 
+const slideInFromTop = keyframes`
+0% {
+  transform: translateY(-100%);
+}
+100% {
+  transform: translateY(0);
+}
+`
+const slideInFromLeft = keyframes`
+0% {
+  transform: translateX(-100%);
+}
+100% {
+  transform: translateX(0);
+}
+`
+
+const wait = keyframes`
+  0% {transform: translateY(-150%); }
+  100% { transform: translateY(-150%); }
+`
+
+const waitX = keyframes`
+  0% {transform: translateX(-150%); }
+  100% { transform: translateX(-150%); }
+`
+
+const fadeIn = keyframes`
+0% {
+      opacity: 0;
+  }
+  100% {
+      opacity: 1;
+   }
+`;
+
 const Main = styled.div`
+position: relative;
 height: 100vh;
+background-color: black;
 `;
 
 const IconSpan = styled.span`
@@ -319,40 +381,191 @@ const CheckIcon = styled(AiFillCheckCircle)`
 color: green;
 `;
 
-const ContentContainer = styled.div`
-display: grid;
-grid-template-columns: 1fr 350px 1fr;
-grid-template-rows: 1fr;
+const UploadIcon = styled(TbPhotoUp)`
+font-size: 120px;
+color: #FAFFFD;
+@media (max-width: 750px) {
+  font-size: 50px;
+}
+`;
+const BuildingIcon = styled(VscServerProcess)`
+font-size: 120px;
+color: #FAFFFD;
+@media (max-width: 750px) {
+  font-size: 50px;
+}
+`;
+const PlaylistIcon = styled(RiPlayListFill)`
+font-size: 120px;
+color: #FAFFFD;
+@media (max-width: 750px) {
+  font-size: 50px;
+}
 `;
 
-const InstructionsContainer = styled.div`
+const NumberIcon1 = styled(TbHexagonNumber1)`
+font-size:40px;
+color:white;
+${props => props.process==process[1] && `
+display: none;
+`}
+`
+
+const ContentContainer = styled.div`
 display: flex;
 flex-direction: column;
 align-items: center;
-color: black
+height: 90%;
+`;
+
+const InstructionsContainer = styled.div`
+position: realative;
+display: flex;
+color: black;
+margin-top: 50px;
+gap: 50px;
+justify-content: center;
+${props => props.process==process[1] && `
+height: 100%;
+width: 100%;
+margin: 0;
+gap: 0;
+transition: width .2s 0s ease-in-out;
+transition: all .5s 0.2s ease-in-out;
+`}
 @media (prefers-color-scheme: dark) {
   color: white;
 }
-gap: 10px;
-margin-bottom: 20px;
-`;
-
-const InstructionsItem = styled.div`
-font-family: Arial, Helvetica, sans-serif;
-text-align: center;
-font-size: 1.5rem;
-@media (prefers-color-scheme: dark) {
-  color: white;
+@media (max-width: 750px) {
+  gap: 20px;
+  flex-direction: column;
 }
 `;
 
-const InstructionsItemDone = styled.div`
-font-family: Arial, Helvetica, sans-serif;
-text-align: center;
-font-size: 1.5rem;
-color: green;
+const InstructionCard = styled.div`
+&:nth-child(1){
+  animation: .3s ease-out 0s 1 ${slideInFromTop};
+  ${props => props.process==process[1] && `
+  padding: 0;
+  box-shadow: none;
+  overflow: hidden;
+
+    &:hover,
+    &:focus {
+      box-shadow: 
+        none;
+    }
+  height: 90vh;
+  width: 100vw;
+  transition-property: height, width;
+  transition: .5s 0.2s ease-in-out;
+  flex-direction: column;
+`}
+}
+&:nth-child(2){
+  left: 220px;
+  animation: .5s ease-out 0s 1 ${wait}, .3s ease-out .5s 1 ${slideInFromTop};
+  ${props => props.process==process[1] && `
+  padding: 0;
+  height: 0;
+  width: 0;
+  transition: all .2s ease-out;
+  box-shadow: none;
+  overflow: hidden;
+
+    &:hover,
+    &:focus {
+      box-shadow: 
+        none;
+    }
+`}
+}
+&:nth-child(3){
+  animation: 1s ease-out 0s 1 ${wait}, .3s ease-out 1s 1 ${slideInFromTop};
+  ${props => props.process==process[1] && `
+  padding: 0;
+  height: 0;
+  width: 0;
+  transition: all .2s ease-out;
+  box-shadow: none;
+  overflow: hidden;
+
+`}
+}
+width: 200px;
+background-color: #1DB954;
+transition: 0.25s;
+display: flex;
+flex-direction: column;
+height: 250px;
+padding: 15px;
+@media (max-width: 750px) {
+  width: 400px;
+  flex-direction: row;
+  height: 100px;
+  &:nth-child(1){
+    animation: .3s ease-out 0s 1 ${slideInFromLeft};
+  }
+  &:nth-child(2){
+    animation: .5s ease-out 0s 1 ${waitX}, .3s ease-out .5s 1 ${slideInFromLeft};
+  }
+  &:nth-child(3){
+    animation: 1s ease-out 0s 1 ${waitX}, .3s ease-out 1s 1 ${slideInFromLeft};
+  }
+}
 `;
 
+const InstructionCardIcon = styled.div`
+height: 150px;
+display: flex;
+align-items: center;
+justify-content: center;
+color: black;
+@media (max-width: 750px) {
+  height: 100px;
+  width: 100px;
+  border-radius: 10px 0 0 10px;
+}
+`;
+
+const InstructionCardTextContainer = styled.div`
+display: flex;
+flex-direction: column;
+height: 100px;
+color: #FAFFFD;
+@media (prefers-color-scheme: dark) {
+  color: white;
+}
+@media (max-width: 750px) {
+  height: 100px;
+  width: 300px;
+}
+`;
+const InstructionText = styled.div`
+font-family: 'Dosis', sans-serif;
+font-size: 1.5rem;
+font-weight: 900;
+justify-self: end;
+text-align: center;
+`;
+
+const BeginButton = styled.button`
+font-size: 2rem;
+margin-top: 50px;
+align-self: center;
+justify-self: center;
+font-weight: 700;
+font-family: Arial, Helvetica, sans-serif;
+border: none;
+padding: 10px;
+border-radius: 5px;
+background-color: #1DB954;
+color: white;
+&:hover{
+  filter: brightness(80%);
+  cursor: pointer;
+}
+`;
 const NameInput = styled.input`
 text-align: center;
 width: 100%;
@@ -403,17 +616,22 @@ font-family: arial;
 }
 `;
 const InputContainer = styled.div`
-grid-column: 2 / 3;
-grid-row: 1 / 2;
 display: flex;
 flex-direction: column;
 align-items: center;
 margin-top: 100px;
 gap: 25px;
 margin-bottom: 40px;
+opacity: 0;
+animation: ${fadeIn} ease 2s 1s;
+animation-iteration-count: 1;
+animation-fill-mode: forwards;
 `;
 
 const SpotifyLogin = styled.button`
+margin-top: 50px;
+align-self: center;
+justify-self: center;
 font-weight: 700;
 font-family: Arial, Helvetica, sans-serif;
 border: none;
@@ -428,15 +646,15 @@ color: white;
 `;
 
 const SpotifySpan = styled.span`
+font-size: 2rem;
 display: flex;
 align-items: center;
 gap: 5px;
+color: black;
 `
 
 const SpotifyLogo = styled(Image)`
-background-color: black;
 padding: 3px;
-border-radius: 50%;
 `;
 
 const InputTypeContainer = styled.div`
@@ -565,9 +783,7 @@ const ProcessHeader = styled.h1`
 font-family: Arial, Helvetica, sans-serif;
 margin-bottom: 25px;
 text-align: center;
-@media (prefers-color-scheme: dark) {
-  color: white;
-}
+color:white;
 `;
 
 const CodeSquare = styled.div`
@@ -589,17 +805,17 @@ font-family: 'Source Code Pro', monospace;
 
 const FinishedContainer = styled.div`
 display: grid;
-grid-template-columns: 1fr minmax(100px, 200px) 400px 1fr;
+grid-template-columns: 1fr 150px 400px 1fr;
 grid-template-rows: 50px 1fr; 
 gap: 10px;
 margin-bottom: 20px;
 `;
 
 const InfoContainer = styled.div`
+grid-column: 2/3;
+grid-row: 2/4;
 display: flex;
 flex-direction: column;
-grid-row: 2/3;
-grid-column: 2/3;
 justify-content: space-between;
 @media (max-width: 750px) {
   justify-content: flex-start;
@@ -614,8 +830,10 @@ font-family: Arial, Helvetica, sans-serif;
 `;
 
 const DetailsConatiner = styled.div`
+color: white;
 display: flex;
 flex-direction: column;
+align-items: center;
 `;
 
 const DetailSpan = styled.div`
@@ -650,8 +868,8 @@ height: 50px;
 border: none;
 padding: 10px;
 border-radius: 5px;
-// background-color: #1DB954;
-background-color: red;
+background-color: #1DB954;
+font-size: 1.5rem;
 color: white;
 &:hover{
   filter: brightness(80%);
@@ -700,9 +918,10 @@ color:#ea9010;
 
 const process = [
   'before',
+  'begin',
   'Scraping text from poster image',
   'Using AI to find artist names',
-  'Retrieving liked songs from spotify',
+  'Retrieving liked songs',
   'Finding songs with attending artists',
   'Creating playlist',
   'done'
@@ -717,3 +936,29 @@ export async function getServerSideProps() {
       }, 
   }
 }
+
+
+
+//SPOTIFY LOGIN BUTTON LOGIC:
+// {!spotifyLoggedIn && Object.values(providers).map((provider)=>(
+//   <div key={provider.name}>
+//       <SpotifyLogin
+//       onClick={()=>signIn(provider.id, {callbackUrl: "/"})}>
+//         <SpotifySpan>
+//           <SpotifyLogo
+//             src="/spotify-logo.png"
+//             alt="Spotify logo"
+//             width={25}
+//             height={25}/>
+//             login with {provider.name}
+//         </SpotifySpan>
+//       </SpotifyLogin>
+//   </div>
+// ))}
+
+{/* <NameInput type="text"
+  id="festival name"
+  name="festival name"
+  placeholder='Festival name'
+  onChange={(e) => setFestName(e.target.value)}>
+</NameInput> */}
