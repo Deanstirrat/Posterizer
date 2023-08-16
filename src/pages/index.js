@@ -198,7 +198,7 @@ export default function Home( {providers} ) {
             <InstructionCard process={processStatus}>
             <NumberIcon1 process={processStatus}/>
               <InstructionCardIcon><UploadIcon/></InstructionCardIcon>
-              <InstructionCardTextContainer><InstructionText>Upload a poster</InstructionText></InstructionCardTextContainer>
+              <InstructionCardTextContainer><InstructionText process={processStatus}>Upload a poster</InstructionText></InstructionCardTextContainer>
               {processStatus==process[1] && 
                 <InputContainer>
                 <InputTypeContainer>
@@ -256,7 +256,7 @@ export default function Home( {providers} ) {
                 </SpotifyLogin>
             </div>
           ))}
-          {spotifyLoggedIn && processStatus==process[0] && <BeginButton onClick={()=>handleChangeProcess(1)}>Begin</BeginButton>}
+          {spotifyLoggedIn && processStatus==process[0] && <BeginButton onClick={()=>handleChangeProcess(1)}>START</BeginButton>}
         </ContentContainer>}
 
 
@@ -347,13 +347,13 @@ const slideInFromLeft = keyframes`
 `
 
 const wait = keyframes`
-  0% {transform: translateY(-150%); }
-  100% { transform: translateY(-150%); }
+  0% {transform: translateY(-200%); }
+  100% { transform: translateY(-200%); }
 `
 
 const waitX = keyframes`
-  0% {transform: translateX(-150%); }
-  100% { transform: translateX(-150%); }
+  0% {transform: translateX(-200%); }
+  100% { transform: translateX(-200%); }
 `
 
 const fadeIn = keyframes`
@@ -414,6 +414,8 @@ display: none;
 const ContentContainer = styled.div`
 display: flex;
 flex-direction: column;
+justify-content: center;
+gap: 25px;
 align-items: center;
 height: 90%;
 `;
@@ -426,8 +428,11 @@ margin-top: 50px;
 gap: 50px;
 justify-content: center;
 ${props => props.process==process[1] && `
-height: 100%;
-width: 100%;
+height: 80%;
+width: 80%;
+@media (max-width: 750px) {
+  width: 100%;
+}
 margin: 0;
 gap: 0;
 transition: width .2s 0s ease-in-out;
@@ -497,6 +502,7 @@ background-color: #1DB954;
 transition: 0.25s;
 display: flex;
 flex-direction: column;
+justify-content: space-around;
 height: 250px;
 padding: 15px;
 @media (max-width: 750px) {
@@ -547,18 +553,21 @@ font-size: 1.5rem;
 font-weight: 900;
 justify-self: end;
 text-align: center;
+${props => props.process==process[1] && `
+font-size: 3rem;
+transition: font-size .8s 0s ease-in-out;
+`}
+
 `;
 
 const BeginButton = styled.button`
 font-size: 2rem;
-margin-top: 50px;
 align-self: center;
 justify-self: center;
 font-weight: 700;
-font-family: Arial, Helvetica, sans-serif;
+font-family: 'Dosis', sans-serif;
 border: none;
 padding: 10px;
-border-radius: 5px;
 background-color: #1DB954;
 color: white;
 &:hover{
@@ -619,9 +628,8 @@ const InputContainer = styled.div`
 display: flex;
 flex-direction: column;
 align-items: center;
-margin-top: 100px;
 gap: 25px;
-margin-bottom: 40px;
+margin-bottom: 150px;
 opacity: 0;
 animation: ${fadeIn} ease 2s 1s;
 animation-iteration-count: 1;
@@ -675,7 +683,7 @@ width: 100%;
 `;
 
 const LinkInput = styled.input`
-width: 80%;
+width: 200px;
 padding:3px;
 text-align: center;
 border-style: solid;
@@ -708,7 +716,7 @@ white-space: nowrap;
 cursor: pointer;
 font-weight: 700;
 font-size: 10pt;
-width: 80%;
+width: 200px;
 text-align: center;
 font-family: Arial, Helvetica, sans-serif;
 border-color: ${(props) => props.hasFile==null ? 'black' : 'green'};
