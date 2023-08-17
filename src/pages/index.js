@@ -293,7 +293,7 @@ export default function Home( {providers} ) {
                   {({ isVisible }) => {
                     const percentage = isVisible ? userArtists.size : 0;
                     return (
-                      <CircularProgressbar value={numFound} maxValue={artists.size} text={`${(percentage/artists.size)*100}%` } styles={buildStyles({
+                      <CircularProgressbar value={userArtists.size} maxValue={artists.size} text={`${(userArtists.size/artists.size).toFixed(2)*100}%` } styles={buildStyles({
                       pathColor: `#1DB954`,
                       textColor: '#1DB954',
                       trailColor: '#d6d6d6',
