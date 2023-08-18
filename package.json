@@ -9,7 +9,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@next/swc-darwin-arm64": "^13.3.0",
     "eslint": "8.35.0",
     "eslint-config-next": "13.2.3",
     "eventsource": "^2.0.2",
