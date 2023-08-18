@@ -72,7 +72,6 @@ export default function Home( {providers} ) {
     setProcessStatus(process[2]);
     const prompt = await getOCR(image, imageURL, handleChangeProcess);
       if(prompt==undefined){
-        console.log("bad result");
         setProcessStatus(process[0]);
         return;
       }
@@ -112,12 +111,10 @@ export default function Home( {providers} ) {
       console.log("finished");
       setArtistStreamData("");
       const artistsData = JSON.stringify(artistList.split(', '));
-      console.log(artistsData);
       JSON.parse(artistsData).map((artistData)=>{
         artists.add(artistData.toLowerCase())
       })
         console.log("artists found, retrieving music library");
-        console.log(artists);
         setProcessStatus(process[4]);
         let iter=0;
         let run = true;
@@ -153,7 +150,7 @@ export default function Home( {providers} ) {
         setProcessStatus(process[6]);
         spotifyApi.createPlaylist(festName, { 'description': 'Playlist made with Dean\'s playlist generator', 'public': true })
         .then(async (playlist)=>{
-          console.log(playlist.body.external_urls.spotify);
+          // console.log(playlist.body.external_urls.spotify);
           setPlaylistUrl(playlist.body.external_urls.spotify);
           setPlaylistEmbedUrl(playlist.body.external_urls.spotify.replace(/open.spotify.com\/playlist\//, "open.spotify.com/embed/playlist/"));
           console.log("playlist created, adding tracks");
@@ -228,8 +225,8 @@ export default function Home( {providers} ) {
       setArtistStreamData("");
       const artistsData = JSON.stringify(artistList.split(', '));
       console.log(artistsData);
-      JSON.parse(artistsData).map((artistData)=>{
-        artists.add(artistData.toLowerCase());
+      JSON.parse(artistsData).map((artist)=>{
+        artists.add(artist.toLowerCase());
       })
         console.log("artists found, retrieving music library");
         console.log(artists);
@@ -335,6 +332,12 @@ export default function Home( {providers} ) {
               <InstructionCardTextContainer><InstructionText process={processStatus}>Upload a poster</InstructionText></InstructionCardTextContainer>
               {processStatus==process[1] && 
                 <InputContainer>
+                <NameInput type="text"
+                  id="festival name"
+                  name="festival name"
+                  placeholder='Festival name'
+                  onChange={(e) => setFestName(e.target.value)}>
+                </NameInput>
                 <InputTypeContainer>
                   <FileUpload 
                     type="file"
@@ -359,8 +362,10 @@ export default function Home( {providers} ) {
                     <ExampleLink href='https://festuff-production.s3.amazonaws.com/uploads/image/attachment/45581/lineup-847-poster-91504ac8-d0d9-42e0-bee2-ae136a86b34b.jpg'>example</ExampleLink>
                   </LinkSpan>
                 </InputTypeContainer>
-                <SubmitButton disabled={((imageURL==null || imageURL=='') && image==null) ||  !spotifyLoggedIn} onClick={handleSubmit}><BsHammer/>Personal Playlist</SubmitButton>    
-                <SubmitButton disabled={((imageURL==null || imageURL=='') && image==null) ||  !spotifyLoggedIn} onClick={handleBuildExplorePlaylist}><BsHammer/>All Artist Playlist</SubmitButton>    
+                <SubmitButtonContainer>
+                  <SubmitButton disabled={((imageURL==null || imageURL=='') && image==null) ||  !spotifyLoggedIn} onClick={handleSubmit}><BsHammer/>Personal Playlist</SubmitButton>    
+                  <SubmitButton disabled={((imageURL==null || imageURL=='') && image==null) ||  !spotifyLoggedIn} onClick={handleBuildExplorePlaylist}><BsHammer/>All Artist Playlist</SubmitButton>  
+                </SubmitButtonContainer>  
               </InputContainer>
               }
             </InstructionCard>
@@ -714,11 +719,12 @@ color: white;
 `;
 const NameInput = styled.input`
 text-align: center;
-width: 100%;
-height: 30px;
+width: 250px;
+height: 50px;
 border-radius: 10px;
 border: 1px solid;
 border-color: black;
+font-size: 1.5rem;
 `;
 
 const LineBreak = styled.div`
@@ -767,6 +773,9 @@ flex-direction: column;
 align-items: center;
 gap: 25px;
 margin-bottom: 150px;
+@media (max-width: 750px) {
+  margin-bottom: 50px;
+}
 opacity: 0;
 animation: ${fadeIn} ease 2s 1s;
 animation-iteration-count: 1;
@@ -870,6 +879,14 @@ color: ${(props) => props.hasFile==null ? 'black' : 'green'};
   border-color: ${(props) => props.hasFile==null ? 'white' : 'green'};
   color: ${(props) => props.hasFile==null ? 'white' : 'green'};
 }
+`;
+
+const SubmitButtonContainer = styled.div`
+display: flex;
+gap: 10px;
+// @media (max-width: 750px) {
+//  flex-direction: column;
+// }
 `;
 
 const SubmitButton = styled.button`
@@ -1070,8 +1087,8 @@ const process = [
   'Finding songs with attending artists',
   'Creating playlist',
   'done',
-  'Searching artists',
-  'Adding Songs'
+  'Searching For Artists',
+  'Adding Top Songs'
 ]
 
 export async function getServerSideProps() {
