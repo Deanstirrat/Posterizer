@@ -179,6 +179,140 @@ export default function Home( {providers} ) {
         });
   }
 
+
+
+
+  const handleBuildExplorePlaylist = async () => {
+    console.log("scraping text from image");
+    setProcessStatus(process[2]);
+    const prompt = await getOCR(image, imageURL, handleChangeProcess);
+      if(prompt==undefined){
+        console.log("bad result");
+        setProcessStatus(process[0]);
+        return;
+      }
+      console.log("Finding artists in text");
+      setProcessStatus(process[3]);
+      setArtistStreamData("");
+      const cleanArtists = await fetch("/api/openai", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt,
+        }),
+      });
+      if (!cleanArtists.ok) {
+        throw new Error(cleanArtists.statusText);
+      }
+      const responseData = cleanArtists.body;
+      if (!responseData) {
+        return;
+      }
+
+      const reader = responseData.getReader();
+      const decoder = new TextDecoder();
+      let done = false;
+
+      let artistList = "";
+      while (!done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        const chunkValue = decoder.decode(value);
+        artistList = artistList + chunkValue;
+        setArtistStreamData((prev) => prev + chunkValue);
+      }
+
+      console.log("finished");
+      setArtistStreamData("");
+      const artistsData = JSON.stringify(artistList.split(', '));
+      console.log(artistsData);
+      JSON.parse(artistsData).map((artistData)=>{
+        artists.add(artistData.toLowerCase());
+      })
+        console.log("artists found, retrieving music library");
+        console.log(artists);
+        setProcessStatus(process[8]);
+
+        //NEW CODE STARS HERE:
+
+        //for artist in scrapedArtists:
+            //search spotify artists with api to get spotify artist id
+            //add artist id to artistIDs
+        //for artistID in artistIDs:
+            //add top tracks of artistID to playlistData
+        //Create playlist
+        let artistIDs = []
+        let artistCount = 0;
+        for(let artistName of artists){
+            const artistData = await spotifyApi.searchArtists(artistName, {type : ["artist"], market: "US", limit: 1});
+            if (artistData.statusCode!=200) {
+                alert("error getting spotify artist, try again");
+                setProcessStatus(process[0]);
+                throw new Error(`HTTP error! status: ${data.statusCode}`);
+            }
+            if(artistData.body.artists.total>1 && artistData.body.artists.items[0].name.toLowerCase()==artistName.toLowerCase()){
+              userArtists.add(artistName);
+              artistCount = artistCount+1;
+              setLibraryItems(artistCount);
+              artistIDs = artistIDs.concat(artistData.body.artists.items[0].id);
+            }
+            //can also get genres artist is known for here
+                //could be used for a word cloud about fest
+            //can get a popularity ranking of artist to skew tracks
+        }
+
+        setProcessStatus(process[9]);
+        let songCount = 0;
+        setLibraryItems(0);
+        for(let artistID of artistIDs){
+            const topTracks = await spotifyApi.getArtistTopTracks(artistID, "US");
+            if (topTracks.statusCode!=200) {
+                alert("error getting artist("+ aritstID +"), try again");
+                setProcessStatus(process[0]);
+                throw new Error(`HTTP error! status: ${data.statusCode}`);
+            }
+            for(let track of topTracks.body.tracks){ 
+              songCount=songCount+1;
+              setLibraryItems(songCount);
+              playlistData.add(track.uri);}
+        }
+        setNumFound(songCount);
+
+        setProcessStatus(process[6]);
+        spotifyApi.createPlaylist(festName, { 'description': 'Playlist made with Dean\'s playlist generator', 'public': true })
+        .then(async (playlist)=>{
+            setPlaylistUrl(playlist.body.external_urls.spotify);
+            setPlaylistEmbedUrl(playlist.body.external_urls.spotify.replace(/open.spotify.com\/playlist\//, "open.spotify.com/embed/playlist/"));
+            console.log("playlist created, adding tracks");
+            let iter=0;
+            let run = true;
+            const playListArray = Array.from(playlistData);
+            console.log(playlistData);
+            while(run){
+              console.log("adding 100");
+              const slice = playListArray.slice((iter*100), ((iter*100)+100));
+              const response = await spotifyApi.addTracksToPlaylist(playlist.body.id, slice)
+              if (response.statusCode!=200 && response.statusCode!=201) {
+                alert("No tracks found");
+                setProcessStatus(process[0]);
+                throw new Error(`HTTP error! status: ${response.statusCode}`);
+              }
+              if(slice.length<100){
+                console.log("small slice");
+                run=false;
+              }
+              iter=iter+1;
+            }
+            setProcessStatus(process[7]);
+            }, function(err) {
+              console.log('Something went wrong!', err);
+              alert('unable to create playlist');
+              setProcessStatus(process[0]);
+        });
+  }
+
   return (
     <>
       <Head>
@@ -225,7 +359,8 @@ export default function Home( {providers} ) {
                     <ExampleLink href='https://festuff-production.s3.amazonaws.com/uploads/image/attachment/45581/lineup-847-poster-91504ac8-d0d9-42e0-bee2-ae136a86b34b.jpg'>example</ExampleLink>
                   </LinkSpan>
                 </InputTypeContainer>
-                <SubmitButton disabled={((imageURL==null || imageURL=='') && image==null) ||  !spotifyLoggedIn} onClick={handleSubmit}><BsHammer/>Build Playlist</SubmitButton>    
+                <SubmitButton disabled={((imageURL==null || imageURL=='') && image==null) ||  !spotifyLoggedIn} onClick={handleSubmit}><BsHammer/>Personal Playlist</SubmitButton>    
+                <SubmitButton disabled={((imageURL==null || imageURL=='') && image==null) ||  !spotifyLoggedIn} onClick={handleBuildExplorePlaylist}><BsHammer/>All Artist Playlist</SubmitButton>    
               </InputContainer>
               }
             </InstructionCard>
@@ -268,6 +403,8 @@ export default function Home( {providers} ) {
               {processStatus==process[2] && <LoadingIcons.Grid fill="#1DB954"/> }
               {processStatus==process[3] && <CodeSquare>{artistStreamData}</CodeSquare>}
               {processStatus==process[4] && <ProcessHeader>Retrieved {libraryItems} songs</ProcessHeader>}
+              {processStatus==process[8] && <ProcessHeader>Found {libraryItems} artists</ProcessHeader>}
+              {processStatus==process[9] && <ProcessHeader>Found {libraryItems} songs</ProcessHeader>}
             </ProcessDisplayContainer>
           </ContentContainer>
           }
@@ -307,7 +444,7 @@ export default function Home( {providers} ) {
               <DetailSpan><BsMusicNoteBeamed/> - {numFound}</DetailSpan>
               <DetailSpan><BsFillPeopleFill/> - {userArtists.size}</DetailSpan>
             </DetailsConatiner>
-            <ResetButton onClick={()=>{setProcessStatus(process[0]); setNumFound(0); setImage(null); setImageURL(null); setLibraryItems(0);setArtists(new Set()); setUserArtists(new Set());}}>Restart</ResetButton>
+            <ResetButton onClick={()=>{setProcessStatus(process[0]); setNumFound(0); setImage(null); setImageURL(null); setLibraryItems(0);setArtists(new Set()); setUserArtists(new Set()); setPlaylistData(new Set())}}>Restart</ResetButton>
             </InfoContainer>
           </FinishedContainer>
           }
@@ -932,7 +1069,9 @@ const process = [
   'Retrieving liked songs',
   'Finding songs with attending artists',
   'Creating playlist',
-  'done'
+  'done',
+  'Searching artists',
+  'Adding Songs'
 ]
 
 export async function getServerSideProps() {
