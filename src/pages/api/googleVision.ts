@@ -15,7 +15,11 @@ export const getGCPCredentials = () => {
     : {};
 };
 
-const client = new ImageAnnotatorClient(getGCPCredentials());
+//local testing
+const client = new ImageAnnotatorClient();
+
+//prod
+// const client = new ImageAnnotatorClient(getGCPCredentials());
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   const { image, imageURL } = req.body;

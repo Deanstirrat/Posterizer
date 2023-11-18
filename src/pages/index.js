@@ -15,7 +15,7 @@ import { IoCloudUploadOutline } from "react-icons/io5";
 import { CiPlay1 } from "react-icons/ci";
 import { PiHeadphones } from "react-icons/pi";
 import { AiFillCheckCircle, AiFillGithub } from "react-icons/ai";
-import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
+import { CircularProgressbar, buildStyles, CircularProgressbarWithChildren } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import VisibilitySensor from "react-visibility-sensor";
 
@@ -354,10 +354,11 @@ export default function Home( {providers} ) {
                     accept="image/png, image/jpeg" 
                     onChange={(e) => handleImageChange(e)}>
                   </FileUpload>
-                  <FileUploadButton
+                  {!imageURL && <FileUploadButton
                     htmlFor="poster upload"
-                    hasFile={image}>{image != null ? <span><CheckIcon/>File Selected</span> : 'File'}</FileUploadButton>
-                  <LinkSpan>
+                    hasFile={image}>{image != null ? <span><CheckIcon/>File Selected</span> : 'File'}
+                  </FileUploadButton>}
+                  {!image && <LinkSpan>
                     <LinkInput 
                       type="text"
                       id="posterLink" 
@@ -367,7 +368,7 @@ export default function Home( {providers} ) {
                       onChange={(e) => setImageURL(e.target.value)}>
                     </LinkInput>
                     <ExampleLink href='https://festuff-production.s3.amazonaws.com/uploads/image/attachment/45581/lineup-847-poster-91504ac8-d0d9-42e0-bee2-ae136a86b34b.jpg'>example</ExampleLink>
-                  </LinkSpan>
+                  </LinkSpan>}
                 {/* </InputTypeContainer> */}
                 <SubmitButtonContainer>
                   <SubmitButton disabled={((imageURL==null || imageURL=='') && image==null) ||  !spotifyLoggedIn} onClick={handleSubmit}><BsHammer/>Personal</SubmitButton>    
@@ -403,7 +404,7 @@ export default function Home( {providers} ) {
                 </SpotifyLogin>
             </div>
           ))}
-          {spotifyLoggedIn && processStatus==process[0] && <BeginButton onClick={()=>handleChangeProcess(1)}>START</BeginButton>}
+          {spotifyLoggedIn && processStatus==process[0] && <BeginButton onClick={()=>handleChangeProcess(1)}>Start</BeginButton>}
         </ContentContainer>}
 
 
@@ -411,10 +412,10 @@ export default function Home( {providers} ) {
           {(processStatus!=process[0] && processStatus!=process[1] && processStatus!=process[7]) &&
           <ContentContainer>
             <ProcessDisplayContainer>
-              <ProcessHeader>{processStatus}</ProcessHeader>
-              {processStatus==process[2] && <LoadingIcons.Grid fill="#1DB954"/> }
+              {/* <ProcessHeader>{processStatus}</ProcessHeader> */}
+              {processStatus==process[2] && <LoadingIcons.Grid fill="#0dcadb"/> }
               {processStatus==process[3] && <CodeSquare>{artistStreamData}</CodeSquare>}
-              {processStatus==process[4] && <ProcessHeader>Retrieved {libraryItems} songs</ProcessHeader>}
+              {processStatus==process[4] && <ProcessHeader>{libraryItems} songs</ProcessHeader>}
               {processStatus==process[8] && <ProcessHeader>Found {libraryItems} artists</ProcessHeader>}
               {processStatus==process[9] && <ProcessHeader>Found {libraryItems} songs</ProcessHeader>}
             </ProcessDisplayContainer>
@@ -442,11 +443,27 @@ export default function Home( {providers} ) {
                   {({ isVisible }) => {
                     const percentage = isVisible ? userArtists.size : 0;
                     return (
-                      <CircularProgressbar value={userArtists.size} maxValue={artists.size} text={`${(userArtists.size/artists.size).toFixed(2)*100}%` } styles={buildStyles({
-                      pathColor: `#1DB954`,
-                      textColor: '#1DB954',
-                      trailColor: '#d6d6d6',
-                      })} />
+                      <CircularProgressbarWithChildren
+                        value={userArtists.size}
+                        maxValue={artists.size}
+                        styles={buildStyles({
+                          pathColor: `hsl(${(1 - userArtists.size / artists.size) * 120}, 100%, 50%)`,
+                          textColor: '#1DB954',
+                          trailColor: '#d6d6d6',
+                          textSize: '15px',
+                        })}
+                      >
+                        <div style={{ 
+                          fontSize: '19px', 
+                          marginTop: '-5px', 
+                          color: '#ededed', 
+                          textAlign: 'center'
+                          }}>
+                          {(userArtists.size / artists.size).toFixed(2) * 100}%
+                          <br />
+                          match
+                        </div>
+                      </CircularProgressbarWithChildren>
 
                     );
                   }}
@@ -517,7 +534,7 @@ const fadeIn = keyframes`
 const Main = styled.div`
 position: relative;
 height: 100vh;
-background-color: black;
+background-color: #ededed;
 `;
 
 const IconSpan = styled.span`
@@ -647,7 +664,7 @@ const InstructionCard = styled.div`
 `}
 }
 width: 200px;
-background-color: #1DB954;
+background-color: #0dcadb;
 transition: 0.25s;
 display: flex;
 flex-direction: column;
@@ -746,7 +763,7 @@ font-weight: 700;
 font-family: 'Dosis', sans-serif;
 border: none;
 padding: 10px;
-background-color: #1DB954;
+background-color: #0dcadb;
 color: white;
 &:hover{
   filter: brightness(80%);
@@ -883,7 +900,7 @@ border-radius: 7px;
 border: 1px solid;
 font-weight: 700;
 font-size: 25pt;
-border-color: ${(props) => (props.link==null || props.link=='') ? 'black' : 'green'};
+border-color: ${(props) => (props.link==null || props.link=='') ? 'white' : 'green'};
 @media (prefers-color-scheme: dark) {
   border-color: ${(props) => (props.link==null || props.link=='') ? 'white' : 'green'};
   color: ${(props) => (props.link==null || props.link=='') ? 'white' : 'green'};
@@ -895,40 +912,33 @@ border-color: ${(props) => (props.link==null || props.link=='') ? 'black' : 'gre
 
 const ExampleLink = styled(Link)`
 font-size: 0.8rem;
-color: rgb(88, 219, 219);
+color: #e3dede;
+font-family: Arial, Helvetica, sans-serif;
+&:hover {
+  color: white;
+}
 `;
 
 const FileUpload = styled.input`
 display: none;
 `
 const FileUploadButton = styled.label`
-display: inline-block;
-background: linear-gradient(top, #f9f9f9, #e3e3e3);
 border: 1px solid;
 border-radius: 7px;
-padding: 5px 8px;
-outline: none;
+padding: 5px 65px;
 white-space: nowrap;
 -webkit-user-select: none;
 cursor: pointer;
 font-weight: 700;
-font-size: 25pt;
-// width: 200px;
+font-size: 2rem;
 text-align: center;
 font-family: Arial, Helvetica, sans-serif;
-border-color: ${(props) => props.hasFile==null ? 'black' : 'green'};
-color: ${(props) => props.hasFile==null ? 'black' : 'green'};
+border-color: ${(props) => props.hasFile==null ? 'white' : 'green'};
+color: ${(props) => props.hasFile==null ? 'white' : 'green'};
 
 &:hover {
-  background-color: black;
-  color: white;
-}
-&:active:before {
-  background: -webkit-linear-gradient(top, #e3e3e3, #f9f9f9);
-}
-@media (prefers-color-scheme: dark) {
-  border-color: ${(props) => props.hasFile==null ? 'white' : 'green'};
-  color: ${(props) => props.hasFile==null ? 'white' : 'green'};
+  background-color: white;
+  color: black;
 }
 `;
 
@@ -967,7 +977,7 @@ font-family: Arial, Helvetica, sans-serif;
 padding: 15px;
 width: 100%;
 border-radius: 15px;
-background-color: black;
+background-color: #ededed;
 color: white;
 @media (prefers-color-scheme: dark) {
   background-color: white;
@@ -1018,21 +1028,34 @@ font-family: 'Source Code Pro', monospace;
 
 const FinishedContainer = styled.div`
 display: grid;
-grid-template-columns: 1fr 150px 400px 1fr;
+grid-template-columns: 1fr 200px 400px 1fr;
 grid-template-rows: 50px 1fr; 
 gap: 10px;
 margin-bottom: 20px;
+
+@media (max-width: 750px) {
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr 150px; 
+}
 `;
 
 const InfoContainer = styled.div`
+background: rgb(255,255,255);
+background: linear-gradient(0deg, rgba(255,255,255,1) 3%, rgba(13,202,219,1) 82%);
+padding: 15px;
+border-radius: 20px;
 grid-column: 2/3;
 grid-row: 2/4;
 display: flex;
 flex-direction: column;
-justify-content: space-between;
+gap:10px;
 @media (max-width: 750px) {
-  justify-content: flex-start;
-  gap: 15px;
+  gap: 10px;
+  grid-column: 1/2;
+  grid-row: 2/3;
+  display: grid;
+  grid-template-columns: 30% 1fr;
+  grid-template-rows: 50px 1fr; 
 }
 `;
 
@@ -1043,7 +1066,7 @@ font-family: Arial, Helvetica, sans-serif;
 `;
 
 const DetailsConatiner = styled.div`
-color: white;
+color: #ededed;
 display: flex;
 flex-direction: column;
 align-items: center;
@@ -1053,7 +1076,7 @@ const DetailSpan = styled.div`
 font-size: 2rem;
 font-family: Arial, Helvetica, sans-serif;
 @media (max-width: 750px) {
-  font-size: 1rem;
+  font-size: 1.25rem;
 }
 `
 
@@ -1067,12 +1090,16 @@ width: 100%;
 height: 500px;
 border-radius:30px;
 @media (max-width: 750px) {
-  width: 80%;
+  padding: 5px;
+  width: 100%;
+  grid-row-start: 1;
+  grid-row-end: 2;
+  grid-column-start: 1;
+  grid-column-end: 2;
 }
 `;
 
 const ResetButton = styled.button`
-grid-row: 2/3;
 grid-column: 2/3;
 font-weight: 700;
 font-family: Arial, Helvetica, sans-serif;
@@ -1081,12 +1108,16 @@ height: 50px;
 border: none;
 padding: 10px;
 border-radius: 5px;
-background-color: #1DB954;
+background-color: #0dcadb;
 font-size: 1.5rem;
 color: white;
+margin-top: auto; // Add this line
 &:hover{
   filter: brightness(80%);
   cursor: pointer;
+}
+@media (max-width: 750px) {
+  height: 100%;
 }
 `;
 
