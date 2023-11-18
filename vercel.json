@@ -1,0 +1,10 @@
+{
+    "version": 2,
+    "name": "posterizer",
+    "builds": [
+      { "src": "next.config.js", "use": "@vercel/next" }
+    ],
+    "routes": [
+      { "src": "/.*", "dest": "/index.js" }
+    ]
+  }
