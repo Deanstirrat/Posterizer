@@ -755,6 +755,7 @@ color: white;
 `;
 const NameInput = styled.input`
 background: none;
+color: black;
 text-align: center;
 width: 250px;
 height: 50px;
@@ -762,6 +763,13 @@ border-radius: 10px;
 border: 1px solid;
 border-color: white;
 font-size: 1.5rem;
+&::placeholder {
+  color: white;
+  opacity: 1; /* Firefox */
+}
+&::onFocus {
+  border-color: none;
+}
 `;
 
 const LineBreak = styled.div`
@@ -866,6 +874,7 @@ width: 100%;
 `;
 
 const LinkInput = styled.input`
+background: none;
 width: 70%;
 padding:3px;
 text-align: center;
@@ -878,6 +887,9 @@ border-color: ${(props) => (props.link==null || props.link=='') ? 'black' : 'gre
 @media (prefers-color-scheme: dark) {
   border-color: ${(props) => (props.link==null || props.link=='') ? 'white' : 'green'};
   color: ${(props) => (props.link==null || props.link=='') ? 'white' : 'green'};
+}
+&::placeholder {
+  color: white;
 }
 `;
 
