@@ -334,7 +334,7 @@ export default function Home( {providers} ) {
         {(processStatus==process[0] || processStatus==process[1])&& 
         <ContentContainer>
           <InstructionsContainer process={processStatus}>
-            <InstructionCard onClick={()=>{if(spotifyLoggedIn) handleChangeProcess(1)}} process={processStatus}>
+            <InstructionCard onClick={()=>{if(spotifyLoggedIn){handleChangeProcess(1)}}} process={processStatus}>
             <NumberIcon1 process={processStatus}/>
               {processStatus!=process[1] && <InstructionCardIcon><UploadIcon/></InstructionCardIcon>}
               {processStatus!=process[1] &&  <InstructionCardTextContainer><InstructionText process={processStatus}>Upload</InstructionText></InstructionCardTextContainer> }
