@@ -326,8 +326,6 @@ export default function Home( {providers} ) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="preconnect" href="https://fonts.googleapis.com"/>
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-        <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro&display=swap" rel="stylesheet"/>
-        <link href="https://fonts.googleapis.com/css2?family=Dosis:wght@300&display=swap" rel="stylesheet"/>
       </Head>
       <Main>
         {/* INPUT */}
@@ -340,36 +338,36 @@ export default function Home( {providers} ) {
               {processStatus!=process[1] &&  <InstructionCardTextContainer><InstructionText process={processStatus}>Upload</InstructionText></InstructionCardTextContainer> }
               {processStatus==process[1] && 
                 <InputContainer>
-                <NameInput type="text"
-                  id="festival name"
-                  name="festival name"
-                  placeholder='Festival name'
-                  onChange={(e) => setFestName(e.target.value)}>
-                </NameInput>
-                {/* <InputTypeContainer> */}
-                  <FileUpload 
-                    type="file"
-                    id="poster upload" 
-                    name="poster upload"
-                    accept="image/png, image/jpeg" 
-                    onChange={(e) => handleImageChange(e)}>
-                  </FileUpload>
-                  {!imageURL && <FileUploadButton
-                    htmlFor="poster upload"
-                    hasFile={image}>{image != null ? <span><CheckIcon/>File Selected</span> : 'File'}
-                  </FileUploadButton>}
-                  {!image && <LinkSpan>
-                    <LinkInput 
-                      type="text"
-                      id="posterLink" 
-                      name="posterLink" 
-                      placeholder='Link'
+                  <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="floatingInput" placeholder="festival name" onChange={(e) => setFestName(e.target.value)}/>
+                    <label for="floatingInput">Festival Name</label>
+                  </div>
+                  <h5>Upload poster or url</h5>
+                  <div class="form-floating mb-3">
+                    <input 
+                      disabled={image}
+                      type="text" 
+                      class="form-control" 
+                      id="floatingInput" placeholder="image url"
                       link={imageURL}
-                      onChange={(e) => setImageURL(e.target.value)}>
-                    </LinkInput>
-                    <ExampleLink href='https://festuff-production.s3.amazonaws.com/uploads/image/attachment/45581/lineup-847-poster-91504ac8-d0d9-42e0-bee2-ae136a86b34b.jpg'>example</ExampleLink>
-                  </LinkSpan>}
-                {/* </InputTypeContainer> */}
+                      onChange={(e) => setImageURL(e.target.value)}
+                      data-bs-toggle="tooltip"
+                      data-bs-placement="top"
+                      title="paste the link to a festival poster"
+                    />
+                    <label for="floatingInput">Image url</label>
+                  </div>
+                  <div class="mb-3">
+                    <input 
+                      class="form-control"
+                      type="file" id="formFile"
+                      disabled={imageURL}
+                      onChange={(e) => handleImageChange(e)}
+                      data-bs-toggle="tooltip"
+                      data-bs-placement="top"
+                      title="upload a festival poster image"
+                    />
+                  </div>
                 <SubmitButtonContainer>
                   <SubmitButton disabled={((imageURL==null || imageURL=='') && image==null) ||  !spotifyLoggedIn} onClick={handleSubmit}><BsHammer/>Personal</SubmitButton>    
                   <SubmitButton disabled={((imageURL==null || imageURL=='') && image==null) ||  !spotifyLoggedIn} onClick={handleBuildExplorePlaylist}><BsHammer/>Explore</SubmitButton>  
@@ -404,7 +402,10 @@ export default function Home( {providers} ) {
                 </SpotifyLogin>
             </div>
           ))}
-          {spotifyLoggedIn && processStatus==process[0] && <BeginButton onClick={()=>handleChangeProcess(1)}>Start</BeginButton>}
+          {spotifyLoggedIn && processStatus==process[0] && 
+          <button type="button" class="btn btn-outline-success btn-lg" onClick={()=>handleChangeProcess(1)}>Start</button>
+          // <BeginButton onClick={()=>handleChangeProcess(1)}>Start</BeginButton>
+          }
         </ContentContainer>}
 
 
@@ -479,7 +480,7 @@ export default function Home( {providers} ) {
           }
 
 
-        <CenterDiv>
+        {/* <CenterDiv> */}
           <CreditTag>
             <span>
             Created by
@@ -489,7 +490,7 @@ export default function Home( {providers} ) {
             </GitLink>
             </span>
           </CreditTag>
-        </CenterDiv>
+        {/* </CenterDiv> */}
       </Main>
     </>
   )
@@ -583,14 +584,13 @@ flex-direction: column;
 justify-content: center;
 gap: 25px;
 align-items: center;
-height: 90%;
+height: 100%;
 `;
 
 const InstructionsContainer = styled.div`
 position: realative;
 display: flex;
 color: black;
-margin-top: 50px;
 gap: 50px;
 justify-content: center;
 ${props => props.process==process[1] && `
@@ -626,11 +626,12 @@ const InstructionCard = styled.div`
       box-shadow: 
         none;
     }
-  height: 90vh;
-  width: 100vw;
+  height: 100%;
+  width: 100%;
   transition-property: height, width;
   transition: .5s 0.2s ease-in-out;
   flex-direction: column;
+  align-items: center;
 `}
 }
 &:nth-child(2){
@@ -706,6 +707,7 @@ width: 0;
 `;
 
 const InstructionCardTextContainer = styled.div`
+cursor: default;
 display: flex;
 flex-direction: column;
 height: 100px;
@@ -830,14 +832,10 @@ font-family: arial;
 }
 `;
 const InputContainer = styled.div`
+width: 50%;
 display: flex;
 flex-direction: column;
 align-items: center;
-gap: 25px;
-margin-bottom: 150px;
-@media (max-width: 750px) {
-  margin-bottom: 50px;
-}
 opacity: 0;
 animation: ${fadeIn} ease 2s 1s;
 animation-iteration-count: 1;
@@ -1129,6 +1127,12 @@ align-items: center;
 `;
 
 const CreditTag = styled.div`
+position: fixed;
+bottom: 5px;
+left: 50%;
+transform: translateX(-50%);
+z-index: 9999;
+/* Add any other styles you need for the element */
 justify-self: center;
 display: flex;
 flex-direction: column;
