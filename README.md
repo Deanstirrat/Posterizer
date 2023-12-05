@@ -1,1 +1,1 @@
-Spotify has not approved the app for public use so send me a message if you want access and I can manually add you.
+update: Spotify has extended by api rates so anyone can now use this tool!
