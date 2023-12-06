@@ -617,9 +617,9 @@ gap: 0;
 transition: width .2s 0s ease-in-out;
 transition: all .5s 0.2s ease-in-out;
 `}
-@media (prefers-color-scheme: dark) {
-  color: white;
-}
+// @media (prefers-color-scheme: dark) {
+//   color: white;
+// }
 @media (max-width: 750px) {
   gap: 20px;
   flex-direction: column;
@@ -725,9 +725,9 @@ display: flex;
 flex-direction: column;
 height: 100px;
 color: #FAFFFD;
-@media (prefers-color-scheme: dark) {
-  color: white;
-}
+// @media (prefers-color-scheme: dark) {
+//   color: white;
+// }
 @media (max-width: 750px) {
   height: 100px;
   width: 300px;
