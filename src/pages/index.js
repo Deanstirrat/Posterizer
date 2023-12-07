@@ -71,7 +71,7 @@ export default function Home( {providers} ) {
 
   const handleSubmit = async () => {
     console.log("scraping text from image");
-    setProcessStatus(process[2]);
+    // setProcessStatus(process[2]);
 
     const response = await fetch("/api/googleVision", {
       method: "POST",
@@ -198,7 +198,7 @@ export default function Home( {providers} ) {
 
   const handleBuildExplorePlaylist = async () => {
     console.log("scraping text from image");
-    setProcessStatus(process[2]);
+    // setProcessStatus(process[2]);
     const prompt = await getOCR(image, imageURL, handleChangeProcess);
     if(prompt==undefined){
       console.log("bad result");
@@ -376,15 +376,15 @@ export default function Home( {providers} ) {
                       onChange={(e) => handleImageChange(e)}>
                     </FileUpload>
                     <FileUploadButton
-                      className={`btn btn-lg ${image != null ? 'btn-success' : 'btn-warning'}`}
+                      className={`btn btn-lg ${image != null ? 'btn-success' : 'btn-warning'} ${imageURL!="" ? "disabled" : ''}`}
                       htmlFor="poster upload"
                       hasFile={image}>
                         {image != null ? 'File uploaded' : 'Upload File'}
                     </FileUploadButton>
                     </div>
                     <div className="d-flex gap-3 justify-content-center">
-                      <button disabled={((imageURL==null || imageURL=='') && image==null) ||  !spotifyLoggedIn} onClick={handleSubmit} type="button" class="btn btn-primary btn-lg" title="Only artists/songs you have saved"><BsHammer/>Personal</button>    
-                      <button disabled={((imageURL==null || imageURL=='') && image==null) ||  !spotifyLoggedIn} onClick={handleBuildExplorePlaylist} type="button" class="btn btn-primary btn-lg" title="All artists attending fest"><BsBinocularsFill/>Explore</button>  
+                      <button disabled={((imageURL==null || imageURL=='') && image==null) ||  !spotifyLoggedIn} onClick={()=>{setProcessStatus(process[2]); handleSubmit}} type="button" class="btn btn-primary btn-lg" title="Only artists/songs you have saved"><BsHammer/>Personal</button>    
+                      <button disabled={((imageURL==null || imageURL=='') && image==null) ||  !spotifyLoggedIn} onClick={()=>{setProcessStatus(process[2]); handleBuildExplorePlaylist}} type="button" class="btn btn-primary btn-lg" title="All artists attending fest"><BsBinocularsFill/>Explore</button>  
                     </div>  
                   </div>
                 </div>
