@@ -336,12 +336,17 @@ export default function Home( {providers} ) {
               {processStatus!=process[1] && <InstructionCardIcon><UploadIcon/></InstructionCardIcon>}
               {processStatus!=process[1] &&  <InstructionCardTextContainer><InstructionText process={processStatus}>Upload</InstructionText></InstructionCardTextContainer> }
               {processStatus==process[1] && 
-                <InputContainer className='border rounded p-5 bg-light'>
+                <div className='container p-5'>
                 <div className="row mb-3">
+                  {window.innerWidth>750 && 
+                    <div className="col">
+                      <Image src="/directions.gif" width={400} height={400} className="img-fluid rounded mh-50" alt="Responsive image"></Image>
+                    </div>
+                  }
                   <div className="col">
-                    <img src="/directions.gif" class="img-fluid" alt="Responsive image"></img>
-                  </div>
-                  <div className="col">
+                    {window.innerWidth<=750 && 
+                      <div><Image src="/directions.gif" width={275} height={275} className="img-fluid rounded mb-3" alt="Responsive image"></Image></div>
+                    }
                     <div class="form-floating mb-5">
                       <input type="text" class="form-control" id="floatingInput" placeholder="festival name" onChange={(e) => setFestName(e.target.value)} autocomplete="off"/>
                       <label for="floatingInput">Festival Name</label>
@@ -361,8 +366,8 @@ export default function Home( {providers} ) {
                       />
                       <label for="floatingInput">Image url</label>
                     </div>
-                    or
-                    <div class="mb-3">
+                    <LineBreak>or</LineBreak>
+                    <div class="mb-5">
                     <FileUpload 
                       type="file"
                       id="poster upload" 
@@ -370,22 +375,20 @@ export default function Home( {providers} ) {
                       accept="image/png, image/jpeg" 
                       onChange={(e) => handleImageChange(e)}>
                     </FileUpload>
-                    <label
-                      className={`btn btn-lg ${image != null ? 'btn-success' : 'btn-secondary'}`}
+                    <FileUploadButton
+                      className={`btn btn-lg ${image != null ? 'btn-success' : 'btn-warning'}`}
                       htmlFor="poster upload"
                       hasFile={image}>
                         {image != null ? 'File uploaded' : 'Upload File'}
-                    </label>
+                    </FileUploadButton>
                     </div>
+                    <div className="d-flex gap-3 justify-content-center">
+                      <button disabled={((imageURL==null || imageURL=='') && image==null) ||  !spotifyLoggedIn} onClick={handleSubmit} type="button" class="btn btn-primary btn-lg" title="Only artists/songs you have saved"><BsHammer/>Personal</button>    
+                      <button disabled={((imageURL==null || imageURL=='') && image==null) ||  !spotifyLoggedIn} onClick={handleBuildExplorePlaylist} type="button" class="btn btn-primary btn-lg" title="All artists attending fest"><BsBinocularsFill/>Explore</button>  
+                    </div>  
                   </div>
                 </div>
-                <div className='row'>
-                  <SubmitButtonContainer>
-                    <button disabled={((imageURL==null || imageURL=='') && image==null) ||  !spotifyLoggedIn} onClick={handleSubmit} type="button" class="btn btn-primary" title="Only artists/songs you have saved"><BsHammer/>Personal</button>    
-                    <button disabled={((imageURL==null || imageURL=='') && image==null) ||  !spotifyLoggedIn} onClick={handleBuildExplorePlaylist} type="button" class="btn btn-primary" title="All artists attending fest"><BsBinocularsFill/>Explore</button>  
-                  </SubmitButtonContainer>  
-                </div>
-              </InputContainer>
+              </div>
               }
             </InstructionCard>
             <InstructionCard process={processStatus}>
@@ -548,7 +551,7 @@ const fadeIn = keyframes`
 const Main = styled.div`
 position: relative;
 height: 100vh;
-background-color: #ededed;
+background-color: #0F0F0F;
 `;
 
 const IconSpan = styled.span`
@@ -678,7 +681,7 @@ const InstructionCard = styled.div`
 `}
 }
 width: 200px;
-background-color: #0dcadb;
+background-color: #232D3F;
 transition: 0.25s;
 display: flex;
 flex-direction: column;
@@ -706,7 +709,6 @@ height: 150px;
 display: flex;
 align-items: center;
 justify-content: center;
-color: black;
 @media (max-width: 750px) {
   height: 100px;
   width: 100px;
@@ -805,21 +807,23 @@ font-size: 1.5rem;
 `;
 
 const LineBreak = styled.div`
+color:white;
 position: relative;
 font-size: 20px;
-width: 50%;
+width: 100%;
 z-index: 1;
 overflow: hidden;
 text-align: center;
 font-family: arial;
 &:after {
+  color:white;
   position: absolute;
   top: 51%;
   overflow: hidden;
   width: 48%;
   height: 1px;
   content: '\a0';
-  background-color: black;
+  background-color: white;
   margin-left: 2%;
 }
 &:before {
@@ -829,7 +833,7 @@ font-family: arial;
   width: 48%;
   height: 1px;
   content: '\a0';
-  background-color: black;
+  background-color: white;
   margin-left: 2%;
   margin-left: -50%;
   text-align: right;
@@ -937,23 +941,7 @@ const FileUpload = styled.input`
 display: none;
 `
 const FileUploadButton = styled.label`
-border: 1px solid;
-border-radius: 7px;
-padding: 5px 65px;
-white-space: nowrap;
--webkit-user-select: none;
-cursor: pointer;
-font-weight: 700;
-font-size: 2rem;
-text-align: center;
-font-family: Arial, Helvetica, sans-serif;
-border-color: ${(props) => props.hasFile==null ? 'white' : 'green'};
-color: ${(props) => props.hasFile==null ? 'white' : 'green'};
-
-&:hover {
-  background-color: white;
-  color: black;
-}
+width: 100%;
 `;
 
 const SubmitButtonContainer = styled.div`
