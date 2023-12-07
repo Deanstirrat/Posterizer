@@ -345,7 +345,7 @@ export default function Home( {providers} ) {
                   }
                   <div className="col">
                     {window.innerWidth<=750 && 
-                      <div><Image src="/directions.gif" width={275} height={275} className="img-fluid rounded mb-3" alt="Responsive image"></Image></div>
+                      <div><Image src="/directions.gif" width={200} height={200} className="img-fluid rounded mb-3" alt="Responsive image"></Image></div>
                     }
                     <div class="form-floating mb-5">
                       <input type="text" class="form-control" id="floatingInput" placeholder="festival name" onChange={(e) => setFestName(e.target.value)} autocomplete="off"/>
